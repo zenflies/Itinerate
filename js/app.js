@@ -19,7 +19,7 @@ let auth0Client = null;
 // TODO: Replace these with your Auth0 Application details
 const AUTH0_DOMAIN = 'dev-607ub60d6546cto0.us.auth0.com';
 const AUTH0_CLIENT_ID = 'pUkC3pu7otzLwkZcLtFvMXfRCNoI9fG1';
-const AUTH0_AUDIENCE = 'https://api.itinerate.com'; // Make sure this perfectly matches your Auth0 dashboard!
+const AUTH0_AUDIENCE = 'https://api.itinerate.com/'; // Make sure this perfectly matches your Auth0 dashboard!
 
 async function apiFetch(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
