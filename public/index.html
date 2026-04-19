@@ -1011,65 +1011,6 @@
   }
 
   // ===== CHATBOT =====
-  const chatResponses = [
-    {
-      keywords: ['quiz', 'personality', 'questions', 'work'],
-      reply: "The quiz has 8 quick questions about your travel pace, activities, accommodation style, and more. Your answers are scored across 6 personality types — and your dominant type becomes your travel profile. It takes under 2 minutes! 🧩"
-    },
-    {
-      keywords: ['destinations', 'available', 'places', 'countries', 'where'],
-      reply: "Your destinations are personalised to you! 🌍 Once you complete the personality quiz, our AI matches you with destinations that suit your travel style — whether you're a Bold Adventurer, Cultural Explorer, Relaxation Seeker, and more. Take the quiz to see your matches!"
-    },
-    {
-      keywords: ['save', 'saving', 'itinerary', 'store', 'keep'],
-      reply: "Once you've chosen a destination, selected your flight and hotel, your full itinerary page has a 💾 Save Itinerary button. It saves everything — the day-by-day plan, your flight, and your hotel — to your account."
-    },
-    {
-      keywords: ['plan', 'planning', 'trip planning', 'organise', 'organize', 'arrange', 'book', 'booking', 'itinerary planning'],
-      reply: "Planning your trip with Itinerate is simple! 🗺️ After taking the quiz and choosing a destination, you'll be guided through three steps: first you pick from curated flight options with different airlines, classes, and price points ✈️ — then you choose from hand-picked hotels ranging from boutique to luxury 🏨 — and finally you get a full personalised day-by-day itinerary. Everything gets saved to your account in one place!"
-    },
-    {
-      keywords: ['flight', 'flights', 'airline', 'fly'],
-      reply: "After choosing a destination, you'll see 3 flight options — economy, mid-range, and business/first class — with realistic routes, durations, and prices. Select the one that fits your budget and style. ✈️"
-    },
-    {
-      keywords: ['hotel', 'hotels', 'stay', 'accommodation', 'lodge'],
-      reply: "Each destination has 3 curated hotel options ranging from boutique to luxury — complete with star ratings, amenities, neighborhood info, and nightly prices. 🏨"
-    },
-    {
-      keywords: ['account', 'sign up', 'register', 'create', 'login', 'log in', 'password'],
-      reply: "You can create a free account using the Sign Up button at the top of the page. Just enter your name, email, and a password — no credit card required. 🔐"
-    },
-    {
-      keywords: ['free', 'cost', 'price', 'pay', 'pricing'],
-      reply: "Itinerate is completely free to use! Sign up, take the quiz, get matched destinations, and generate your full itinerary — all at no cost. 🎉"
-    },
-    {
-      keywords: ['retake', 'redo', 'change personality', 'different result'],
-      reply: "Absolutely! You can retake the quiz as many times as you like from your dashboard. Your travel personality can evolve — different trips might call for a different side of you. 🔄"
-    },
-    {
-      keywords: ['contact', 'email', 'support', 'help', 'team', 'reach'],
-      reply: "You can reach us at travel.itinerate@gmail.com or use the contact form on this page. We typically respond within 24 hours. 📧"
-    },
-    {
-      keywords: ['hi', 'hello', 'hey', 'hiya', 'sup', 'greetings'],
-      reply: "Hey! 👋 Great to have you here. What can I help you with today? Ask me about the quiz, destinations, flights, hotels, or anything else about Itinerate!"
-    },
-    {
-      keywords: ['thank', 'thanks', 'cheers', 'appreciate'],
-      reply: "You're very welcome! 😊 Is there anything else I can help you with?"
-    }
-  ];
-
-  function getBotReply(input) {
-    const lower = input.toLowerCase();
-    for (const item of chatResponses) {
-      if (item.keywords.some(k => lower.includes(k))) return item.reply;
-    }
-    return "I'm not sure about that one! Please use the contact form on this page and our team will get back to you within 24 hours. 📋";
-  }
-
   function appendChatMessage(text, sender) {
     const container = document.getElementById('chatbot-messages');
     const suggestions = document.getElementById('chat-suggestions');
@@ -1081,15 +1022,30 @@
     container.scrollTop = container.scrollHeight;
   }
 
-  function sendChatMessage() {
+  async function sendChatMessage() {
     const input = document.getElementById('chatbot-input');
     const text = input.value.trim();
     if (!text) return;
+    
     appendChatMessage(text, 'user');
     input.value = '';
-    setTimeout(() => {
-      appendChatMessage(getBotReply(text), 'bot');
-    }, 600);
+
+    // Show temporary typing indicator
+    const container = document.getElementById('chatbot-messages');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-msg bot';
+    loadingDiv.id = 'temp-loading';
+    loadingDiv.innerHTML = '<div class="chat-bubble">Typing...</div>';
+    container.appendChild(loadingDiv);
+    container.scrollTop = container.scrollHeight;
+
+    // Fetch live response from Gemini via backend
+    const botReply = await getItiLiveResponse(text);
+    
+    // Remove typing indicator and show the real response
+    const temp = document.getElementById('temp-loading');
+    if (temp) temp.remove();
+    appendChatMessage(botReply, 'bot');
   }
 
   function chatSuggest(text) {

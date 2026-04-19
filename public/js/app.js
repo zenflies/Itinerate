@@ -3,8 +3,8 @@
 // ── API Configuration ─────────────────────────────────────────────────────────
 // When running locally with the backend: 'http://localhost:3000/api'
 // When deployed, change this to your production URL e.g. 'https://api.itinerate.co/api'
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? `http://${window.location.hostname}:3000/api`
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+  ? 'http://localhost:3000/api'
   : '/api';  // Same-origin when frontend is served by the Express server
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
@@ -1168,12 +1168,27 @@ async function saveItinerary() {
   }
 }
 
-function printItinerary() { window.print(); }
-
-function handleContact(e) {
-  e.preventDefault();
-  showToast("Message sent! We'll get back to you within 24 hours.");
-  e.target.reset();
+// ── Iti Live Chatbot Helper ──────────────────────────────────────────────────
+// Call this function from your existing "Iti" chatbot code on the contact page!
+async function getItiLiveResponse(userMessage) {
+  try {
+    const data = await apiFetch('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: userMessage })
+    });
+    
+    if (data && data.reply) {
+      // Format markdown (bold and line breaks) into HTML for your chat UI
+      const safeText = data.reply.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return safeText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br/>');
+    }
+    return "I'm not sure how to respond to that.";
+  } catch (err) {
+    console.error("Iti Chatbot Error:", err);
+    return "Sorry, I am having trouble connecting to the server.";
+  }
 }
 
 function handleScroll() {
@@ -1198,8 +1213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('form-login')?.addEventListener('submit', handleLogin);
   document.getElementById('form-signup')?.addEventListener('submit', handleSignup);
-  document.getElementById('contact-form')?.addEventListener('submit', handleContact);
-
+  
   animateCounters();
 });
 
