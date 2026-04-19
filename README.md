@@ -40,42 +40,6 @@ itinerate-backend/
 
 ---
 
-## Setup Instructions
-
-### 1. Install dependencies
-```bash
-npm install
-```
-
-### 2. Configure environment
-```bash
-cp .env.example .env
-```
-
-Open `.env` and update:
-```env
-JWT_SECRET=replace-with-a-long-random-string
-PORT=3000
-```
-
-Generate a secure secret:
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-### 3. Set up the frontend files
-Create a `public/` folder and copy your frontend into it:
-```
-public/
-├── index.html       ← your existing index.html
-├── css/
-│   └── style.css    ← your existing style.css
-└── js/
-    └── app.js       ← copy from public-js/app.js (the updated version)
-```
-
-### 4. Start the server
-```bash
 # Production
 npm start
 
@@ -232,28 +196,4 @@ The SQLite database (`itinerate.db`) is created automatically on first run.
 
 ---
 
-## Frontend Changes (app.js)
 
-The updated `public-js/app.js` replaces the old in-memory auth with real API calls:
-
-- **Register/Login** → calls `/api/auth/register` and `/api/auth/login`, stores JWT in `localStorage`
-- **Session restore** → on page load, reads JWT from `localStorage` and calls `/api/auth/me` to restore session
-- **Quiz save** → after completing quiz, saves result via `POST /api/itinerary/quiz/save`
-- **Save Itinerary** → calls `POST /api/itinerary` to persist to database under the user's account
-- **Logout** → clears JWT from `localStorage`
-
----
-
-## Deployment Notes
-
-### Environment variables to change for production:
-- `JWT_SECRET` → long random string (64+ characters)
-- `ALLOWED_ORIGIN` → your frontend domain, e.g. `https://itinerate.co`
-- `PORT` → set by your hosting provider (Render, Railway, Fly.io)
-
-### Recommended hosting:
-- **Railway** or **Render** — free tier works, auto-detects Node.js
-- SQLite database file persists on disk; for high-traffic production consider migrating to **PostgreSQL** with the `pg` package
-
-### To use PostgreSQL instead of SQLite:
-Replace `better-sqlite3` with `pg`, update `db.js` queries to use `$1/$2` placeholders, and set a `DATABASE_URL` environment variable.

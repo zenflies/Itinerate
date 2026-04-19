@@ -592,6 +592,41 @@ function updateDashboard() {
     if (quizCta) { quizCta.textContent = 'Retake Quiz'; quizCta.className = 'btn btn-outline btn-sm'; }
   }
 
+  // Update destinations card
+  const destStatus = document.getElementById('dest-card-status');
+  const destCta = document.getElementById('dest-card-cta');
+  if (destStatus && destCta) {
+    if (state.personalityType) {
+      destStatus.className = 'status active';
+      destStatus.textContent = `✓ Matched to ${personalityTypes[state.personalityType]?.title}`;
+      destCta.className = 'btn btn-primary btn-sm';
+    } else {
+      destStatus.className = 'status locked';
+      destStatus.textContent = '🔒 Complete quiz to unlock';
+      destCta.className = 'btn btn-outline btn-sm';
+    }
+  }
+
+  // Update itinerary card
+  const itinStatus = document.getElementById('itin-card-status');
+  const itinCta = document.getElementById('itin-card-cta');
+  if (itinStatus && itinCta) {
+    if (state.selectedDestination) {
+      const dest = allDestinations.find(d => d.id === state.selectedDestination);
+      itinStatus.className = 'status active';
+      itinStatus.textContent = `✓ ${dest ? dest.name : 'Destination'} selected`;
+      itinCta.className = 'btn btn-primary btn-sm';
+    } else if (state.personalityType) {
+      itinStatus.className = 'status locked';
+      itinStatus.textContent = '🔒 Choose a destination first';
+      itinCta.className = 'btn btn-outline btn-sm';
+    } else {
+      itinStatus.className = 'status locked';
+      itinStatus.textContent = '🔒 Complete quiz to unlock';
+      itinCta.className = 'btn btn-outline btn-sm';
+    }
+  }
+
   // Update sidebar user
   const sidebarName = document.getElementById('sidebar-user-name');
   const sidebarEmail = document.getElementById('sidebar-user-email');
