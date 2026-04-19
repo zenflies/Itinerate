@@ -6,6 +6,7 @@ const path = require('path');
 const { initDB } = require('./db');
 const authRoutes = require('./routes/auth');
 const itineraryRoutes = require('./routes/itinerary');
+const contactRoutes = require('./routes/contact');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/itinerary', itineraryRoutes);
+app.use('/api/contact', contactRoutes);
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

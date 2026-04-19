@@ -848,20 +848,20 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>First name</label>
-                  <input type="text" placeholder="Alex" required />
+                  <input type="text" id="contact-fname" placeholder="Alex" required />
                 </div>
                 <div class="form-group">
                   <label>Last name</label>
-                  <input type="text" placeholder="Kim" />
+                  <input type="text" id="contact-lname" placeholder="Kim" />
                 </div>
               </div>
               <div class="form-group">
                 <label>Email address</label>
-                <input type="email" placeholder="you@example.com" required />
+                <input type="email" id="contact-email" placeholder="you@example.com" required />
               </div>
               <div class="form-group">
                 <label>Subject</label>
-                <select>
+                <select id="contact-subject">
                   <option>Question about my itinerary</option>
                   <option>Account issue</option>
                   <option>Destination feedback</option>
@@ -871,9 +871,9 @@
               </div>
               <div class="form-group">
                 <label>Message</label>
-                <textarea placeholder="Tell us how we can help..."></textarea>
+                <textarea id="contact-message" placeholder="Tell us how we can help..." required></textarea>
               </div>
-              <button type="submit" class="btn btn-primary" style="width:100%;padding:14px">
+              <button type="submit" id="contact-submit-btn" class="btn btn-primary" style="width:100%;padding:14px">
                 Send Message →
               </button>
             </form>
@@ -973,6 +973,36 @@
       showPage('page-itinerary'); renderItinerary(state.selectedDestination);
     }
   }
+
+  async function handleContactOverride(e) {
+    e.preventDefault();
+    const btn = document.getElementById('contact-submit-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const payload = {
+      firstName: document.getElementById('contact-fname').value,
+      lastName:  document.getElementById('contact-lname').value,
+      email:     document.getElementById('contact-email').value,
+      subject:   document.getElementById('contact-subject').value,
+      message:   document.getElementById('contact-message').value
+    };
+
+    try {
+      await apiFetch('/contact', { method: 'POST', body: JSON.stringify(payload) });
+      showToast("Message sent! We'll get back to you within 24 hours.");
+      e.target.reset();
+    } catch (err) {
+      showToast('Could not send message — please try again.', 'info');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  document.getElementById('contact-form').removeEventListener('submit', handleContact);
+  document.getElementById('contact-form').addEventListener('submit', handleContactOverride);
 
   function mockSocialLogin(provider) {
     const names = { Google: 'Alex Kim', Apple: 'Jordan Lee' };
