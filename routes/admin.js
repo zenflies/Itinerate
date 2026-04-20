@@ -14,7 +14,7 @@ router.get('/stats', (req, res) => {
   const totalItineraries = db.prepare('SELECT COUNT(*) as count FROM itineraries').get().count;
   const totalAdmins = db.prepare('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').get().count;
   const recentUsers = db.prepare(
-    'SELECT COUNT(*) as count FROM users WHERE created_at >= datetime("now", "-7 days")'
+    'SELECT COUNT(*) as count FROM users WHERE created_at >= datetime(\'now\', \'-7 days\')'
   ).get().count;
   res.json({ totalUsers, totalItineraries, totalAdmins, recentUsers });
 });

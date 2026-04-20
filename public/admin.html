@@ -372,7 +372,7 @@
           <td>
             <div class="actions">
               <button class="btn btn-primary" onclick="toggleAdmin(${u.id},${u.is_admin})">${u.is_admin ? 'Revoke admin' : 'Make admin'}</button>
-              <button class="btn btn-danger" onclick="delUser(${u.id})">Delete</button>
+              <button class="btn btn-danger" onclick="delUser(${u.id},'${esc(u.email)}')">Delete</button>
             </div>
           </td>
         </tr>`).join('');
@@ -388,8 +388,8 @@
     catch (e) { toast(e.message, 'err'); }
   }
 
-  async function delUser(id) {
-    if (!confirm('Delete this user and all their data?')) return;
+  async function delUser(id, email) {
+    if (!confirm('Delete account "' + email + '"?\n\nThis permanently removes the user, their itineraries, and quiz results.')) return;
     try { await api('/api/admin/users/' + id, { method: 'DELETE' }); toast('User deleted.'); loadUsers(); loadStats(); }
     catch (e) { toast(e.message, 'err'); }
   }
