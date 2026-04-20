@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 if sys.stdout.encoding != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -10,6 +11,26 @@ from chromadb_document_processor.flights_crew import FlightsCrew
 from dotenv import load_dotenv
 import json
 load_dotenv()
+
+
+def _extract_json(text: str) -> dict | None:
+    """Extract a JSON object from raw text, handling markdown code fences."""
+    text = text.strip()
+    # Strip markdown code fences
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    # Fall back: find the outermost {...} block
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except Exception:
+            pass
+    return None
 
 app = Flask(__name__)
 
@@ -57,13 +78,19 @@ def flights():
     """Structured flight search endpoint for the Express proxy."""
     query = request.json.get("query", "").strip()
     if not query:
-        return jsonify({"error": "No query provided.", "flights": []}), 400
+        return jsonify({"error": "No query provided.", "flights": [], "return_flights": []}), 400
     try:
         result = FlightsCrew().crew().kickoff(inputs={"query": query})
-        flight_data = result.json_dict if result.json_dict else json.loads(result.raw)
+        # Prefer json_dict (Pydantic-validated), fall back to raw text
+        flight_data = result.json_dict or _extract_json(result.raw or "")
+        if not flight_data:
+            flight_data = {"flights": [], "return_flights": []}
+        # Always ensure both keys are present
+        flight_data.setdefault("flights", [])
+        flight_data.setdefault("return_flights", [])
         return jsonify(flight_data)
     except Exception as e:
-        return jsonify({"error": str(e), "flights": []}), 500
+        return jsonify({"error": str(e), "flights": [], "return_flights": []}), 500
 
 
 @app.route("/save", methods=["POST"])

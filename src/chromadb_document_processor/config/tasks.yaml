@@ -20,17 +20,19 @@ search_flights:
 
     Step 3 — Search:
       - Call the Flight Search tool with: origin, destination, outbound_date,
-        and return_date (if round-trip).
+        and return_date (always provide return_date for round-trip queries; the tool
+        will make a separate inbound search using those dates).
 
     Step 4 — Return results:
       - Return ONLY the raw JSON object produced by the Flight Search tool as your
         final answer. Do not add narrative text, summaries, or markdown formatting.
       - Your entire response must be valid JSON in this exact shape:
-        {"flights": [...]}
+        {"flights": [...], "return_flights": [...]}
+      - "return_flights" will be an empty array for one-way trips.
 
   expected_output: >
-    A valid JSON object with a single top-level key "flights" whose value is an
-    array of flight objects. Each object must have these keys: id, airline, badge,
-    flightNumber, from, to, departure, arrival, duration, stops, price, class, perks.
-    No surrounding text, no markdown code fences — raw JSON only.
+    A valid JSON object with two top-level keys: "flights" (outbound) and
+    "return_flights" (inbound/return). Each is an array of flight objects with
+    keys: id, airline, badge, flightNumber, from, to, departure, arrival, duration,
+    stops, price, class, perks. No surrounding text, no markdown code fences — raw JSON only.
   agent: flight_search_specialist

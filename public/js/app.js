@@ -36,6 +36,7 @@ const state = {
   personalityType: null,
   selectedDestination: null,
   selectedFlight: null,
+  selectedReturnFlight: null,
   selectedHotel: null,
   savedItinerary: false
 };
@@ -526,6 +527,7 @@ async function logout() {
   state.personalityType = null;
   state.selectedDestination = null;
   state.selectedFlight = null;
+  state.selectedReturnFlight = null;
   state.selectedHotel = null;
   state.quizStep = 0;
   showPage('page-home');
@@ -900,6 +902,7 @@ function selectDestination(id) {
 function selectAndGoToItinerary(id) {
   state.selectedDestination = id;
   state.selectedFlight = null;
+  state.selectedReturnFlight = null;
   state.selectedHotel = null;
   if (state.user) updateDashboard();
   showPage('page-flights');
@@ -907,47 +910,60 @@ function selectAndGoToItinerary(id) {
 }
 
 // ===== FLIGHTS =====
-async function renderFlights(destId) {
-  const dest = allDestinations.find(d => d.id === destId);
-  if (!dest) return;
-  const nameEl = document.getElementById('flights-dest-name');
-  if (nameEl) nameEl.textContent = dest.name;
+const _AIRPORT_FLAGS = {
+  // North America
+  JFK:'🇺🇸',LAX:'🇺🇸',ORD:'🇺🇸',ATL:'🇺🇸',DFW:'🇺🇸',SFO:'🇺🇸',MIA:'🇺🇸',
+  SEA:'🇺🇸',BOS:'🇺🇸',LGA:'🇺🇸',EWR:'🇺🇸',DEN:'🇺🇸',IAH:'🇺🇸',PHX:'🇺🇸',
+  MSP:'🇺🇸',DTW:'🇺🇸',PHL:'🇺🇸',CLT:'🇺🇸',LAS:'🇺🇸',MCO:'🇺🇸',
+  YYZ:'🇨🇦',YVR:'🇨🇦',YUL:'🇨🇦',YYC:'🇨🇦',YEG:'🇨🇦',
+  MEX:'🇲🇽',CUN:'🇲🇽',GDL:'🇲🇽',MTY:'🇲🇽',
+  // Europe
+  LHR:'🇬🇧',LGW:'🇬🇧',STN:'🇬🇧',MAN:'🇬🇧',EDI:'🇬🇧',BHX:'🇬🇧',
+  CDG:'🇫🇷',ORY:'🇫🇷',NCE:'🇫🇷',LYS:'🇫🇷',MRS:'🇫🇷',
+  FRA:'🇩🇪',MUC:'🇩🇪',DUS:'🇩🇪',BER:'🇩🇪',HAM:'🇩🇪',STR:'🇩🇪',
+  FCO:'🇮🇹',MXP:'🇮🇹',VCE:'🇮🇹',NAP:'🇮🇹',LIN:'🇮🇹',
+  MAD:'🇪🇸',BCN:'🇪🇸',AGP:'🇪🇸',PMI:'🇪🇸',VLC:'🇪🇸',
+  AMS:'🇳🇱',BRU:'🇧🇪',ZRH:'🇨🇭',GVA:'🇨🇭',VIE:'🇦🇹',
+  LIS:'🇵🇹',OPO:'🇵🇹',DUB:'🇮🇪',CPH:'🇩🇰',ARN:'🇸🇪',
+  OSL:'🇳🇴',HEL:'🇫🇮',WAW:'🇵🇱',KRK:'🇵🇱',PRG:'🇨🇿',BUD:'🇭🇺',
+  ATH:'🇬🇷',HER:'🇬🇷',SKG:'🇬🇷',IST:'🇹🇷',SAW:'🇹🇷',AYT:'🇹🇷',
+  KEF:'🇮🇸',
+  // Middle East & Africa
+  DXB:'🇦🇪',AUH:'🇦🇪',DOH:'🇶🇦',AMM:'🇯🇴',BEY:'🇱🇧',CAI:'🇪🇬',
+  CMN:'🇲🇦',RAK:'🇲🇦',NBO:'🇰🇪',JNB:'🇿🇦',CPT:'🇿🇦',ADD:'🇪🇹',
+  // Asia & Pacific
+  NRT:'🇯🇵',HND:'🇯🇵',KIX:'🇯🇵',CTS:'🇯🇵',FUK:'🇯🇵',OKA:'🇯🇵',
+  ICN:'🇰🇷',GMP:'🇰🇷',PEK:'🇨🇳',PVG:'🇨🇳',CAN:'🇨🇳',CTU:'🇨🇳',
+  HKG:'🇭🇰',TPE:'🇹🇼',SIN:'🇸🇬',KUL:'🇲🇾',CGK:'🇮🇩',DPS:'🇮🇩',
+  BKK:'🇹🇭',HKT:'🇹🇭',CNX:'🇹🇭',SGN:'🇻🇳',HAN:'🇻🇳',MNL:'🇵🇭',
+  DEL:'🇮🇳',BOM:'🇮🇳',BLR:'🇮🇳',MAA:'🇮🇳',CCU:'🇮🇳',HYD:'🇮🇳',
+  CMB:'🇱🇰',DAC:'🇧🇩',KTM:'🇳🇵',
+  SYD:'🇦🇺',MEL:'🇦🇺',BNE:'🇦🇺',PER:'🇦🇺',ADL:'🇦🇺',
+  AKL:'🇳🇿',CHC:'🇳🇿',
+  // South America
+  GRU:'🇧🇷',GIG:'🇧🇷',BSB:'🇧🇷',
+  SCL:'🇨🇱',BOG:'🇨🇴',LIM:'🇵🇪',EZE:'🇦🇷',
+};
 
-  const grid = document.getElementById('flights-grid');
-  if (!grid) return;
-  grid.innerHTML = `<div style="text-align:center;padding:60px;color:#94a3b8">Searching live flights...</div>`;
+function _airportFlag(iata) {
+  return _AIRPORT_FLAGS[iata?.toUpperCase()] || '';
+}
 
-  let flights;
-  try {
-    const data = await apiFetch('/flights', {
-      method: 'POST',
-      body: JSON.stringify({ query: `Flights to ${dest.name} departing next month` })
-    });
-    if (data.flights && data.flights.length) {
-      flights = data.flights.map((f, i) => ({
-        id: `live-${i}`,
-        badge: '✈️',
-        airline: f.airline || 'Unknown',
-        flightNumber: f.flight_number || '',
-        from: f.origin || '',
-        to: f.destination || '',
-        departure: f.departure_time || '',
-        arrival: f.arrival_time || '',
-        duration: f.duration || '',
-        stops: f.stops || 'Nonstop',
-        price: Number(f.price) || 0,
-        class: 'Economy',
-        perks: []
-      }));
-    } else {
-      flights = flightData[destId] || [];
-    }
-  } catch (err) {
-    flights = flightData[destId] || [];
-  }
+function _formatFlightTime(raw) {
+  if (!raw) return '—';
+  // SerpAPI returns "YYYY-MM-DD HH:MM" — make it ISO-parseable
+  const dt = new Date(raw.replace(' ', 'T'));
+  if (isNaN(dt.getTime())) return raw;
+  const date = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const time = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${date} · ${time}`;
+}
 
-  grid.innerHTML = flights.map(f => `
-    <div class="flight-card" id="flight-${f.id}" onclick="selectFlight('${f.id}', ${JSON.stringify(flights).replace(/"/g, '&quot;')})">
+function _buildFlightCard(f, flightList, isReturn) {
+  const listJson = JSON.stringify(flightList).replace(/"/g, '&quot;');
+  const handler = isReturn ? `selectReturnFlight` : `selectFlight`;
+  return `
+    <div class="flight-card" id="flight-${f.id}" onclick="${handler}('${f.id}', ${listJson})">
       <div class="flight-card-top">
         <div class="flight-airline">
           <span class="flight-badge">${f.badge}</span>
@@ -960,8 +976,8 @@ async function renderFlights(destId) {
       </div>
       <div class="flight-route">
         <div class="flight-endpoint">
-          <div class="flight-time">${f.departure}</div>
-          <div class="flight-city">${f.from}</div>
+          <div class="flight-time">${_formatFlightTime(f.departure)}</div>
+          <div class="flight-city">${_airportFlag(f.from)} ${f.from}</div>
         </div>
         <div class="flight-line-area">
           <div class="flight-duration">${f.duration}</div>
@@ -969,8 +985,8 @@ async function renderFlights(destId) {
           <div class="flight-stops-label">${f.stops}</div>
         </div>
         <div class="flight-endpoint right">
-          <div class="flight-time">${f.arrival}</div>
-          <div class="flight-city">${f.to}</div>
+          <div class="flight-time">${_formatFlightTime(f.arrival)}</div>
+          <div class="flight-city">${_airportFlag(f.to)} ${f.to}</div>
         </div>
       </div>
       <div class="flight-perks">
@@ -981,9 +997,71 @@ async function renderFlights(destId) {
           <div class="flight-price">$${f.price.toLocaleString()}</div>
           <div class="flight-price-label">per person</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();selectFlight('${f.id}', ${JSON.stringify(flights).replace(/"/g, '&quot;')})">Select Flight →</button>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();${handler}('${f.id}', ${listJson})">Select Flight →</button>
       </div>
-    </div>`).join('');
+    </div>`;
+}
+
+function _normalizeFlightData(f, i, idPrefix) {
+  return {
+    id: `${idPrefix}-${i}`,
+    badge: f.badge || '✈️',
+    airline: f.airline || 'Unknown',
+    flightNumber: f.flight_number || f.flightNumber || '',
+    from: f.origin || f.from || '',
+    to: f.destination || f.to || '',
+    departure: f.departure_time || f.departure || '',
+    arrival: f.arrival_time || f.arrival || '',
+    duration: f.duration || '',
+    stops: f.stops || 'Nonstop',
+    price: Number(f.price) || 0,
+    class: f.class || 'Economy',
+    perks: f.perks || []
+  };
+}
+
+async function renderFlights(destId) {
+  const dest = allDestinations.find(d => d.id === destId);
+  if (!dest) return;
+  const nameEl = document.getElementById('flights-dest-name');
+  if (nameEl) nameEl.textContent = dest.name;
+
+  const grid = document.getElementById('flights-grid');
+  if (!grid) return;
+  grid.innerHTML = `<div style="text-align:center;padding:60px;color:#94a3b8">Searching live flights...</div>`;
+
+  const returnSection = document.getElementById('return-flights-section');
+  if (returnSection) returnSection.style.display = 'none';
+
+  let flights, returnFlights = [];
+  try {
+    const data = await apiFetch('/flights', {
+      method: 'POST',
+      body: JSON.stringify({ query: `Round-trip flights to ${dest.name} departing next month, returning after 7 days. Search both outbound and return legs.` })
+    });
+    if (data.flights && data.flights.length) {
+      flights = data.flights.map((f, i) => _normalizeFlightData(f, i, 'live'));
+    } else {
+      flights = flightData[destId] || [];
+    }
+    if (data.return_flights && data.return_flights.length) {
+      returnFlights = data.return_flights.map((f, i) => _normalizeFlightData(f, i, 'return'));
+    }
+  } catch (err) {
+    flights = flightData[destId] || [];
+  }
+
+  grid.innerHTML = flights.map(f => _buildFlightCard(f, flights, false)).join('');
+
+  if (returnSection) {
+    const returnGrid = document.getElementById('return-flights-grid');
+    if (returnFlights.length) {
+      returnGrid.innerHTML = returnFlights.map(f => _buildFlightCard(f, returnFlights, true)).join('');
+    } else {
+      returnGrid.innerHTML = `<div style="text-align:center;padding:40px;color:#94a3b8">No return flights found for this route.</div>`;
+    }
+    returnSection.style.display = 'block';
+  }
 
   const continueBtn = document.getElementById('flights-continue-btn');
   if (continueBtn) continueBtn.disabled = !state.selectedFlight;
@@ -995,10 +1073,28 @@ function selectFlight(id, flightList) {
   const flight = flights.find(f => f.id === id);
   if (!flight) return;
   state.selectedFlight = flight;
-  document.querySelectorAll('.flight-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('#flights-grid .flight-card').forEach(c => c.classList.remove('selected'));
   document.getElementById(`flight-${id}`)?.classList.add('selected');
   const continueBtn = document.getElementById('flights-continue-btn');
   if (continueBtn) continueBtn.disabled = false;
+
+  const returnSection = document.getElementById('return-flights-section');
+  if (returnSection && returnSection.style.display !== 'none') {
+    returnSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    setTimeout(() => {
+      showPage('page-hotels');
+      renderHotels(state.selectedDestination);
+    }, 250);
+  }
+}
+
+function selectReturnFlight(id, flightList) {
+  const flight = flightList.find(f => f.id === id);
+  if (!flight) return;
+  state.selectedReturnFlight = flight;
+  document.querySelectorAll('#return-flights-grid .flight-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`flight-${id}`)?.classList.add('selected');
   setTimeout(() => {
     showPage('page-hotels');
     renderHotels(state.selectedDestination);
@@ -1130,18 +1226,29 @@ function updateTripSummaryBar() {
   if (!state.selectedFlight && !state.selectedHotel) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   const f = state.selectedFlight;
+  const r = state.selectedReturnFlight;
   const h = state.selectedHotel;
-  const totalEstimate = (f ? f.price : 0) + (h ? h.price * 5 : 0);
+  const totalEstimate = (f ? f.price : 0) + (r ? r.price : 0) + (h ? h.price * 5 : 0);
   bar.innerHTML = `
     <div class="summary-pill">
       <span class="pill-icon">✈️</span>
       <div>
-        <div class="pill-label">Flight</div>
+        <div class="pill-label">Outbound Flight</div>
         <div class="pill-value">${f ? `${f.airline} · ${f.flightNumber}` : '—'}</div>
         <div class="pill-detail">${f ? `${f.from} → ${f.to} · ${f.stops} · ${f.class}` : ''}</div>
       </div>
       <div class="pill-price">${f ? `$${f.price.toLocaleString()}` : ''}</div>
     </div>
+    ${r ? `
+    <div class="summary-pill">
+      <span class="pill-icon">✈️</span>
+      <div>
+        <div class="pill-label">Return Flight</div>
+        <div class="pill-value">${r.airline} · ${r.flightNumber}</div>
+        <div class="pill-detail">${r.from} → ${r.to} · ${r.stops} · ${r.class}</div>
+      </div>
+      <div class="pill-price">$${r.price.toLocaleString()}</div>
+    </div>` : ''}
     <div class="summary-pill">
       <span class="pill-icon">🏨</span>
       <div>
@@ -1149,14 +1256,14 @@ function updateTripSummaryBar() {
         <div class="pill-value">${h ? h.name : '—'}</div>
         <div class="pill-detail">${h ? `${'★'.repeat(h.stars)} · ${h.neighborhood}` : ''}</div>
       </div>
-      <div class="pill-price">${h ? `$${h.price.toLocaleString()}/night` : ''}</div>
+      <div class="pill-price">${h ? `<span>$${h.price.toLocaleString()}</span><span class="pill-price-label">/night</span>` : ''}</div>
     </div>
     <div class="summary-pill total">
       <span class="pill-icon">💰</span>
       <div>
         <div class="pill-label">Est. Total</div>
         <div class="pill-value">$${totalEstimate.toLocaleString()}</div>
-        <div class="pill-detail">Flight + 5 nights hotel</div>
+        <div class="pill-detail">${r ? 'Outbound + return' : 'Flight'} + 5 nights hotel</div>
       </div>
     </div>`;
 }
@@ -1185,6 +1292,7 @@ async function saveItinerary() {
         personalityType: state.personalityType,
         itinerary: itin,
         flight: state.selectedFlight || null,
+        returnFlight: state.selectedReturnFlight || null,
         hotel: state.selectedHotel || null
       })
     });

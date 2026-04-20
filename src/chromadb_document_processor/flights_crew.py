@@ -26,6 +26,7 @@ class FlightResults(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     flights: list[FlightInfo]
+    return_flights: list[FlightInfo] = []
 
 
 @CrewBase
@@ -50,7 +51,6 @@ class FlightsCrew:
     def search_flights(self) -> Task:
         return Task(
             config=self.tasks_config["search_flights"],
-            output_json=FlightResults,
         )
 
     @crew
