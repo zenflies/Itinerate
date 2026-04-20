@@ -10,7 +10,12 @@ router.use(requireAuth);
 // ── POST /api/itinerary  — save (upsert) an itinerary ─────────────────────────
 router.post('/', (req, res) => {
   try {
-    const { destinationId, destinationName, personalityType, itinerary, flight, hotel } = req.body;
+    const {
+      destinationId, destinationName, personalityType, itinerary,
+      flight, returnFlight, hotel, destination,
+      availableFlights, availableReturnFlights, availableHotels,
+      departureDate, returnDate
+    } = req.body;
 
     if (!destinationId || !destinationName || !personalityType || !itinerary) {
       return res.status(400).json({
@@ -19,23 +24,44 @@ router.post('/', (req, res) => {
     }
 
     const db = getDB();
-    const itineraryJson = JSON.stringify(itinerary);
-    const flightJson    = flight ? JSON.stringify(flight) : null;
-    const hotelJson     = hotel  ? JSON.stringify(hotel)  : null;
+    const itineraryJson              = JSON.stringify(itinerary);
+    const flightJson                 = flight                 ? JSON.stringify(flight)                 : null;
+    const returnFlightJson           = returnFlight           ? JSON.stringify(returnFlight)           : null;
+    const hotelJson                  = hotel                  ? JSON.stringify(hotel)                  : null;
+    const destinationJson            = destination            ? JSON.stringify(destination)            : null;
+    const availableFlightsJson       = availableFlights       ? JSON.stringify(availableFlights)       : null;
+    const availableReturnFlightsJson = availableReturnFlights ? JSON.stringify(availableReturnFlights) : null;
+    const availableHotelsJson        = availableHotels        ? JSON.stringify(availableHotels)        : null;
 
-    // Upsert: if user already has a saved itinerary for this destination, overwrite it
     db.prepare(`
-      INSERT INTO itineraries (user_id, destination_id, destination_name, personality_type, itinerary_json, flight_json, hotel_json, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO itineraries (
+        user_id, destination_id, destination_name, personality_type,
+        itinerary_json, flight_json, return_flight_json, hotel_json,
+        destination_json, available_flights_json, available_return_flights_json, available_hotels_json,
+        departure_date, return_date, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT (user_id, destination_id)
       DO UPDATE SET
-        destination_name = excluded.destination_name,
-        personality_type = excluded.personality_type,
-        itinerary_json   = excluded.itinerary_json,
-        flight_json      = excluded.flight_json,
-        hotel_json       = excluded.hotel_json,
-        updated_at       = datetime('now')
-    `).run(req.user.id, destinationId, destinationName, personalityType, itineraryJson, flightJson, hotelJson);
+        destination_name               = excluded.destination_name,
+        personality_type               = excluded.personality_type,
+        itinerary_json                 = excluded.itinerary_json,
+        flight_json                    = excluded.flight_json,
+        return_flight_json             = excluded.return_flight_json,
+        hotel_json                     = excluded.hotel_json,
+        destination_json               = excluded.destination_json,
+        available_flights_json         = excluded.available_flights_json,
+        available_return_flights_json  = excluded.available_return_flights_json,
+        available_hotels_json          = excluded.available_hotels_json,
+        departure_date                 = excluded.departure_date,
+        return_date                    = excluded.return_date,
+        updated_at                     = datetime('now')
+    `).run(
+      req.user.id, destinationId, destinationName, personalityType,
+      itineraryJson, flightJson, returnFlightJson, hotelJson,
+      destinationJson, availableFlightsJson, availableReturnFlightsJson, availableHotelsJson,
+      departureDate || null, returnDate || null
+    );
 
     const saved = db.prepare(`
       SELECT * FROM itineraries WHERE user_id = ? AND destination_id = ?
@@ -163,8 +189,15 @@ function formatItinerary(row) {
     destinationName: row.destination_name,
     personalityType: row.personality_type,
     itinerary: JSON.parse(row.itinerary_json),
-    flight: row.flight_json ? JSON.parse(row.flight_json) : null,
-    hotel:  row.hotel_json  ? JSON.parse(row.hotel_json)  : null,
+    flight:       row.flight_json        ? JSON.parse(row.flight_json)        : null,
+    returnFlight: row.return_flight_json ? JSON.parse(row.return_flight_json) : null,
+    hotel:        row.hotel_json         ? JSON.parse(row.hotel_json)         : null,
+    destination:            row.destination_json               ? JSON.parse(row.destination_json)               : null,
+    availableFlights:       row.available_flights_json         ? JSON.parse(row.available_flights_json)         : null,
+    availableReturnFlights: row.available_return_flights_json  ? JSON.parse(row.available_return_flights_json)  : null,
+    availableHotels:        row.available_hotels_json          ? JSON.parse(row.available_hotels_json)          : null,
+    departureDate: row.departure_date || null,
+    returnDate:    row.return_date    || null,
     savedAt: row.saved_at,
     updatedAt: row.updated_at
   };

@@ -37,8 +37,112 @@ const state = {
   selectedDestination: null,
   selectedFlight: null,
   selectedHotel: null,
-  savedItinerary: false
+  savedItinerary: false,
+  aiDestinations: null,
+  aiPackage: null,
+  tripStartDate: null,
+  selectedReturnFlight: null,
+  departureCity: 'New York (JFK)'
 };
+
+// ===== AI HELPERS =====
+function findDestination(id) {
+  if (state.aiDestinations) {
+    const found = state.aiDestinations.find(d => d.id === id);
+    if (found) return found;
+  }
+  return allDestinations.find(d => d.id === id);
+}
+
+function defaultDepartureDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().split('T')[0];
+}
+
+function returnDateFor(departureDate) {
+  const d = new Date(departureDate + 'T00:00:00');
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().split('T')[0];
+}
+
+function formatDateDisplay(isoDate) {
+  return new Date(isoDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function initDatePicker() {
+  const dateInput = document.getElementById('trip-depart-date');
+  if (!dateInput) return;
+  if (!state.tripStartDate) state.tripStartDate = defaultDepartureDate();
+  dateInput.min = new Date().toISOString().split('T')[0];
+  dateInput.value = state.tripStartDate;
+  updateReturnDateDisplay();
+
+  const cityInput = document.getElementById('trip-departure-city');
+  if (cityInput && !cityInput.value) cityInput.value = state.departureCity;
+}
+
+async function handleDepartureCityChange(value) {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === state.departureCity) return;
+  state.departureCity = trimmed;
+  if (state.selectedDestination) await reloadAIPackage();
+}
+
+function updateReturnDateDisplay() {
+  const el = document.getElementById('trip-return-date');
+  if (!el || !state.tripStartDate) return;
+  el.textContent = formatDateDisplay(returnDateFor(state.tripStartDate));
+}
+
+async function handleDateChange(value) {
+  if (!value) return;
+  state.tripStartDate = value;
+  updateReturnDateDisplay();
+  if (state.selectedDestination) {
+    await reloadAIPackage();
+  }
+}
+
+async function reloadAIPackage() {
+  const dest = findDestination(state.selectedDestination);
+  if (!dest) return;
+  state.aiPackage = null;
+  state.selectedFlight = null;
+  state.selectedReturnFlight = null;
+  state.selectedHotel = null;
+
+  const grid = document.getElementById('flights-grid');
+  if (grid) grid.innerHTML = `<div class="ai-loading"><div class="ai-spinner"></div><p>Refreshing flights for your new dates...</p></div>`;
+
+  const rDate = state.tripStartDate ? returnDateFor(state.tripStartDate) : null;
+  try {
+    const [pkgResult, retResult] = await Promise.allSettled([
+      apiFetch('/ai/package', {
+        method: 'POST',
+        body: JSON.stringify({
+          destination: dest,
+          personalityType: state.personalityType,
+          departureDate: state.tripStartDate,
+          returnDate: rDate,
+          departureCity: state.departureCity
+        })
+      }),
+      apiFetch('/ai/return-flights', {
+        method: 'POST',
+        body: JSON.stringify({ destination: dest, returnDate: rDate, departureCity: state.departureCity })
+      })
+    ]);
+    const packageData       = pkgResult.status === 'fulfilled' ? pkgResult.value : {};
+    const returnFlightsData = retResult.status === 'fulfilled' ? retResult.value : {};
+    if (pkgResult.status === 'rejected') console.error('Package call failed:', pkgResult.reason);
+    if (retResult.status === 'rejected') console.error('Return flights call failed:', retResult.reason);
+    state.aiPackage = { ...packageData, returnFlights: returnFlightsData.returnFlights || [] };
+  } catch (err) {
+    console.error('AI package reload error:', err);
+  }
+  renderFlights(state.selectedDestination);
+}
 
 // ===== QUIZ DATA =====
 const quizQuestions = [
@@ -864,17 +968,8 @@ function goToDestinations() {
   renderDestinations();
 }
 
-function renderDestinations() {
-  const pt = personalityTypes[state.personalityType];
-  document.getElementById('dest-personality-emoji').textContent = pt.emoji;
-  document.getElementById('dest-personality-type').textContent = pt.title;
-
-  const matched = allDestinations.filter(d => d.types.includes(state.personalityType)).sort((a, b) => b.match - a.match);
-  const others = allDestinations.filter(d => !d.types.includes(state.personalityType)).slice(0, Math.max(0, 4 - matched.length));
-  const destinations = [...matched, ...others].slice(0, 4);
-
-  const grid = document.getElementById('destinations-grid');
-  grid.innerHTML = destinations.map(d => `
+function buildDestinationCards(destinations) {
+  return destinations.map(d => `
     <div class="destination-card" id="dest-card-${d.id}" onclick="selectDestination('${d.id}')">
       <div class="destination-img" style="background: ${d.gradient}">
         <div class="destination-emoji">${d.emoji}</div>
@@ -891,34 +986,87 @@ function renderDestinations() {
     </div>`).join('');
 }
 
+async function renderDestinations() {
+  const pt = personalityTypes[state.personalityType];
+  document.getElementById('dest-personality-emoji').textContent = pt.emoji;
+  document.getElementById('dest-personality-type').textContent = pt.title;
+
+  const grid = document.getElementById('destinations-grid');
+  grid.innerHTML = `<div class="ai-loading"><div class="ai-spinner"></div><p>Finding your perfect destinations...</p></div>`;
+
+  try {
+    const data = await apiFetch('/ai/destinations', {
+      method: 'POST',
+      body: JSON.stringify({ personalityType: state.personalityType, answers: state.quizAnswers })
+    });
+    state.aiDestinations = data.destinations;
+    grid.innerHTML = buildDestinationCards(data.destinations);
+  } catch (err) {
+    console.error('AI destinations error:', err);
+    state.aiDestinations = null;
+    const matched = allDestinations.filter(d => d.types.includes(state.personalityType)).sort((a, b) => b.match - a.match);
+    const others = allDestinations.filter(d => !d.types.includes(state.personalityType)).slice(0, Math.max(0, 4 - matched.length));
+    grid.innerHTML = buildDestinationCards([...matched, ...others].slice(0, 4));
+  }
+}
+
 function selectDestination(id) {
   state.selectedDestination = id;
   document.querySelectorAll('.destination-card').forEach(c => c.classList.remove('selected'));
   document.getElementById(`dest-card-${id}`)?.classList.add('selected');
 }
 
-function selectAndGoToItinerary(id) {
+async function selectAndGoToItinerary(id) {
+  const dest = findDestination(id);
   state.selectedDestination = id;
   state.selectedFlight = null;
+  state.selectedReturnFlight = null;
   state.selectedHotel = null;
+  state.aiPackage = null;
+  if (!state.tripStartDate) state.tripStartDate = defaultDepartureDate();
   if (state.user) updateDashboard();
+
   showPage('page-flights');
+  initDatePicker();
+
+  const grid = document.getElementById('flights-grid');
+  if (grid) grid.innerHTML = `<div class="ai-loading"><div class="ai-spinner"></div><p>Building your travel package for ${dest ? dest.name : id}...</p></div>`;
+
+  const rDate = state.tripStartDate ? returnDateFor(state.tripStartDate) : null;
+  try {
+    const [pkgResult, retResult] = await Promise.allSettled([
+      apiFetch('/ai/package', {
+        method: 'POST',
+        body: JSON.stringify({
+          destination: dest,
+          personalityType: state.personalityType,
+          departureDate: state.tripStartDate,
+          returnDate: rDate,
+          departureCity: state.departureCity
+        })
+      }),
+      apiFetch('/ai/return-flights', {
+        method: 'POST',
+        body: JSON.stringify({ destination: dest, returnDate: rDate, departureCity: state.departureCity })
+      })
+    ]);
+    const packageData       = pkgResult.status === 'fulfilled' ? pkgResult.value : {};
+    const returnFlightsData = retResult.status === 'fulfilled' ? retResult.value : {};
+    if (pkgResult.status === 'rejected') console.error('Package call failed:', pkgResult.reason);
+    if (retResult.status === 'rejected') console.error('Return flights call failed:', retResult.reason);
+    state.aiPackage = { ...packageData, returnFlights: returnFlightsData.returnFlights || [] };
+  } catch (err) {
+    console.error('AI package error:', err);
+  }
+
   renderFlights(id);
 }
 
 // ===== FLIGHTS =====
-function renderFlights(destId) {
-  const dest = allDestinations.find(d => d.id === destId);
-  if (!dest) return;
-  const nameEl = document.getElementById('flights-dest-name');
-  if (nameEl) nameEl.textContent = dest.name;
-
-  const flights = flightData[destId] || [];
-  const grid = document.getElementById('flights-grid');
-  if (!grid) return;
-
-  grid.innerHTML = flights.map(f => `
-    <div class="flight-card" id="flight-${f.id}" onclick="selectFlight('${f.id}')">
+function buildFlightCard(f, selectFn) {
+  const isPremium = f.class.toLowerCase().includes('business') || f.class.toLowerCase().includes('first');
+  return `
+    <div class="flight-card" id="flight-${f.id}" onclick="${selectFn}('${f.id}')">
       <div class="flight-card-top">
         <div class="flight-airline">
           <span class="flight-badge">${f.badge}</span>
@@ -927,12 +1075,13 @@ function renderFlights(destId) {
             <div class="flight-number">${f.flightNumber}</div>
           </div>
         </div>
-        <span class="flight-class-badge ${f.class.toLowerCase().includes('business') || f.class.toLowerCase().includes('first') ? 'premium' : ''}">${f.class}</span>
+        <span class="flight-class-badge ${isPremium ? 'premium' : ''}">${f.class}</span>
       </div>
       <div class="flight-route">
         <div class="flight-endpoint">
           <div class="flight-time">${f.departure}</div>
           <div class="flight-city">${f.from}</div>
+          ${f.date && f.date !== 'TBD' ? `<div class="flight-date">${formatDateDisplay(f.date)}</div>` : ''}
         </div>
         <div class="flight-line-area">
           <div class="flight-duration">${f.duration}</div>
@@ -952,40 +1101,85 @@ function renderFlights(destId) {
           <div class="flight-price">$${f.price.toLocaleString()}</div>
           <div class="flight-price-label">per person</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();selectFlight('${f.id}')">Select Flight →</button>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();${selectFn}('${f.id}')">Select →</button>
       </div>
-    </div>`).join('');
+    </div>`;
+}
 
+function updateFlightContinueBtn() {
   const continueBtn = document.getElementById('flights-continue-btn');
-  if (continueBtn) continueBtn.disabled = !state.selectedFlight;
+  if (!continueBtn) return;
+  const hasReturn = !!(state.aiPackage && state.aiPackage.returnFlights && state.aiPackage.returnFlights.length);
+  continueBtn.disabled = !state.selectedFlight || (hasReturn && !state.selectedReturnFlight);
+}
+
+function renderFlights(destId) {
+  const dest = findDestination(destId);
+  if (!dest) return;
+  const nameEl = document.getElementById('flights-dest-name');
+  if (nameEl) nameEl.textContent = dest.name;
+
+  const outbound = (state.aiPackage && state.aiPackage.flights) || flightData[destId] || [];
+  const returning = (state.aiPackage && state.aiPackage.returnFlights) || [];
+  const grid = document.getElementById('flights-grid');
+  if (!grid) return;
+
+  let html = `<div class="flights-section-label">✈️ Outbound — ${state.departureCity} → ${dest.name}</div>`;
+  html += outbound.map(f => buildFlightCard(f, 'selectFlight')).join('');
+
+  html += `<div class="flights-section-label return-label">↩️ Return — ${dest.name} → ${state.departureCity}</div>`;
+  if (returning.length) {
+    html += returning.map(f => buildFlightCard(f, 'selectReturnFlight')).join('');
+  } else if (state.aiPackage) {
+    html += `<div class="ai-loading" style="padding:32px"><p style="color:#9CA3AF">No return flights were generated — try reloading the page or changing your dates.</p></div>`;
+  }
+
+  grid.innerHTML = html;
+
   if (state.selectedFlight) {
     document.getElementById(`flight-${state.selectedFlight.id}`)?.classList.add('selected');
   }
+  if (state.selectedReturnFlight) {
+    document.getElementById(`flight-${state.selectedReturnFlight.id}`)?.classList.add('selected');
+  }
+  updateFlightContinueBtn();
 }
 
 function selectFlight(id) {
-  const flights = flightData[state.selectedDestination] || [];
+  const flights = (state.aiPackage && state.aiPackage.flights) || flightData[state.selectedDestination] || [];
   const flight = flights.find(f => f.id === id);
   if (!flight) return;
   state.selectedFlight = flight;
-  document.querySelectorAll('.flight-card').forEach(c => c.classList.remove('selected'));
+  // Only deselect outbound cards, not return cards
+  const outbound = (state.aiPackage && state.aiPackage.flights) || flightData[state.selectedDestination] || [];
+  outbound.forEach(f => document.getElementById(`flight-${f.id}`)?.classList.remove('selected'));
   document.getElementById(`flight-${id}`)?.classList.add('selected');
-  const continueBtn = document.getElementById('flights-continue-btn');
-  if (continueBtn) continueBtn.disabled = false;
-  setTimeout(() => {
-    showPage('page-hotels');
-    renderHotels(state.selectedDestination);
-  }, 250);
+  updateFlightContinueBtn();
+  // Scroll to return section if return flights exist and none selected yet
+  const returning = state.aiPackage && state.aiPackage.returnFlights;
+  if (returning && returning.length && !state.selectedReturnFlight) {
+    document.querySelector('.return-label')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function selectReturnFlight(id) {
+  const returning = (state.aiPackage && state.aiPackage.returnFlights) || [];
+  const flight = returning.find(f => f.id === id);
+  if (!flight) return;
+  state.selectedReturnFlight = flight;
+  returning.forEach(f => document.getElementById(`flight-${f.id}`)?.classList.remove('selected'));
+  document.getElementById(`flight-${id}`)?.classList.add('selected');
+  updateFlightContinueBtn();
 }
 
 // ===== HOTELS =====
 function renderHotels(destId) {
-  const dest = allDestinations.find(d => d.id === destId);
+  const dest = findDestination(destId);
   if (!dest) return;
   const nameEl = document.getElementById('hotels-dest-name');
   if (nameEl) nameEl.textContent = dest.name;
 
-  const hotels = hotelData[destId] || [];
+  const hotels = (state.aiPackage && state.aiPackage.hotels) || hotelData[destId] || [];
   const grid = document.getElementById('hotels-grid');
   if (!grid) return;
 
@@ -1021,7 +1215,7 @@ function renderHotels(destId) {
 }
 
 function selectHotel(id) {
-  const hotels = hotelData[state.selectedDestination] || [];
+  const hotels = (state.aiPackage && state.aiPackage.hotels) || hotelData[state.selectedDestination] || [];
   const hotel = hotels.find(h => h.id === id);
   if (!hotel) return;
   state.selectedHotel = hotel;
@@ -1038,11 +1232,14 @@ function selectHotel(id) {
 
 function goToFlights() {
   showPage('page-flights');
+  initDatePicker();
   renderFlights(state.selectedDestination);
 }
 
 function goToHotels() {
-  if (!state.selectedFlight) { showToast('Please select a flight first.', 'info'); return; }
+  const hasReturn = !!(state.aiPackage && state.aiPackage.returnFlights && state.aiPackage.returnFlights.length);
+  if (!state.selectedFlight) { showToast('Please select an outbound flight first.', 'info'); return; }
+  if (hasReturn && !state.selectedReturnFlight) { showToast('Please select a return flight too.', 'info'); return; }
   showPage('page-hotels');
   renderHotels(state.selectedDestination);
 }
@@ -1056,8 +1253,8 @@ function goToItineraryFromHotels() {
 
 // ===== ITINERARY =====
 function renderItinerary(destId) {
-  const dest = allDestinations.find(d => d.id === destId);
-  const itin = itineraryData[destId] || itineraryData['kyoto'];
+  const dest = findDestination(destId);
+  const itin = (state.aiPackage && state.aiPackage.itinerary) || itineraryData[destId] || itineraryData['kyoto'];
   const pt = personalityTypes[state.personalityType || 'cultural'];
   if (!dest || !itin) return;
 
@@ -1101,18 +1298,28 @@ function updateTripSummaryBar() {
   if (!bar) return;
   if (!state.selectedFlight && !state.selectedHotel) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
-  const f = state.selectedFlight;
-  const h = state.selectedHotel;
-  const totalEstimate = (f ? f.price : 0) + (h ? h.price * 5 : 0);
+  const f  = state.selectedFlight;
+  const rf = state.selectedReturnFlight;
+  const h  = state.selectedHotel;
+  const totalEstimate = (f ? f.price : 0) + (rf ? rf.price : 0) + (h ? h.price * 5 : 0);
   bar.innerHTML = `
     <div class="summary-pill">
       <span class="pill-icon">✈️</span>
       <div>
-        <div class="pill-label">Flight</div>
+        <div class="pill-label">Outbound</div>
         <div class="pill-value">${f ? `${f.airline} · ${f.flightNumber}` : '—'}</div>
         <div class="pill-detail">${f ? `${f.from} → ${f.to} · ${f.stops} · ${f.class}` : ''}</div>
       </div>
       <div class="pill-price">${f ? `$${f.price.toLocaleString()}` : ''}</div>
+    </div>
+    <div class="summary-pill">
+      <span class="pill-icon">↩️</span>
+      <div>
+        <div class="pill-label">Return</div>
+        <div class="pill-value">${rf ? `${rf.airline} · ${rf.flightNumber}` : '—'}</div>
+        <div class="pill-detail">${rf ? `${rf.from} → ${rf.to} · ${rf.stops} · ${rf.class}` : ''}</div>
+      </div>
+      <div class="pill-price">${rf ? `$${rf.price.toLocaleString()}` : ''}</div>
     </div>
     <div class="summary-pill">
       <span class="pill-icon">🏨</span>
@@ -1128,7 +1335,7 @@ function updateTripSummaryBar() {
       <div>
         <div class="pill-label">Est. Total</div>
         <div class="pill-value">$${totalEstimate.toLocaleString()}</div>
-        <div class="pill-detail">Flight + 5 nights hotel</div>
+        <div class="pill-detail">Flights + 5 nights hotel</div>
       </div>
     </div>`;
 }
@@ -1144,20 +1351,27 @@ async function saveItinerary() {
     return;
   }
 
-  const dest = allDestinations.find(d => d.id === state.selectedDestination);
-  const itin = itineraryData[state.selectedDestination];
+  const dest = findDestination(state.selectedDestination);
+  const itin = (state.aiPackage && state.aiPackage.itinerary) || itineraryData[state.selectedDestination];
   if (!dest || !itin) return;
 
   try {
     await apiFetch('/itinerary', {
       method: 'POST',
       body: JSON.stringify({
-        destinationId: dest.id,
-        destinationName: dest.name,
-        personalityType: state.personalityType,
-        itinerary: itin,
-        flight: state.selectedFlight || null,
-        hotel: state.selectedHotel || null
+        destinationId:    dest.id,
+        destinationName:  dest.name,
+        personalityType:  state.personalityType,
+        itinerary:        itin,
+        flight:           state.selectedFlight       || null,
+        returnFlight:     state.selectedReturnFlight || null,
+        hotel:            state.selectedHotel        || null,
+        destination:      dest,
+        availableFlights:       state.aiPackage?.flights       || null,
+        availableReturnFlights: state.aiPackage?.returnFlights || null,
+        availableHotels:        state.aiPackage?.hotels        || null,
+        departureDate:    state.tripStartDate || null,
+        returnDate:       state.tripStartDate ? returnDateFor(state.tripStartDate) : null
       })
     });
     state.savedItinerary = true;

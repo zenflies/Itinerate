@@ -582,6 +582,24 @@
         <p style="color:#6B7280;max-width:500px;margin:0 auto;font-size:0.95rem">
           Select the flight that suits your budget and travel style. Prices shown are per person.
         </p>
+        <div class="trip-date-picker">
+          <div class="date-field">
+            <label for="trip-departure-city">Departure City</label>
+            <input type="text" id="trip-departure-city" placeholder="New York (JFK)"
+              onblur="handleDepartureCityChange(this.value)"
+              onkeydown="if(event.key==='Enter'){this.blur()}" />
+          </div>
+          <div class="date-arrow">✈️</div>
+          <div class="date-field">
+            <label for="trip-depart-date">Departure Date</label>
+            <input type="date" id="trip-depart-date" onchange="handleDateChange(this.value)" />
+          </div>
+          <div class="date-arrow">→</div>
+          <div class="date-field">
+            <label>Return Date <span class="date-note">(5 days at destination)</span></label>
+            <div class="date-display" id="trip-return-date">—</div>
+          </div>
+        </div>
       </div>
       <div class="flights-grid" id="flights-grid">
         <!-- Rendered by JS -->

@@ -58,9 +58,16 @@ function initDB() {
     );
   `);
 
-  // Add flight_json / hotel_json to existing databases that predate this column
+  // Migrate older databases — add columns that didn't exist at creation time
   try { db.exec(`ALTER TABLE itineraries ADD COLUMN flight_json TEXT`); } catch (_) {}
   try { db.exec(`ALTER TABLE itineraries ADD COLUMN hotel_json TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN destination_json TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN available_flights_json TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN available_hotels_json TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN departure_date TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN return_date TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN return_flight_json TEXT`); } catch (_) {}
+  try { db.exec(`ALTER TABLE itineraries ADD COLUMN available_return_flights_json TEXT`); } catch (_) {}
 
   console.log('✅ Database initialised at', DB_PATH);
   return db;
