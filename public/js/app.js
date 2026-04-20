@@ -705,6 +705,17 @@ async function handleSignup(e) {
     });
     setToken(data.token);
     state.user = data.user;
+    state.quizStep = 0;
+    state.quizAnswers = [];
+    state.personalityType = null;
+    state.selectedDestination = null;
+    state.selectedFlight = null;
+    state.selectedReturnFlight = null;
+    state.selectedHotel = null;
+    state.aiPackage = null;
+    state.aiDestinations = null;
+    state.tripStartDate = null;
+    state.savedItinerary = false;
     showPage('page-dashboard');
     updateDashboard();
     showToast(`Welcome to Itinerate, ${firstName}! Let's find your perfect trip.`);
@@ -1028,10 +1039,11 @@ async function calculatePersonality() {
   const scores = {};
   state.quizAnswers.forEach(a => { if (a && a.type) scores[a.type] = (scores[a.type] || 0) + 1; });
 
-  let dominant = 'cultural', maxScore = 0;
+  let dominant = null, maxScore = 0;
   for (const [type, score] of Object.entries(scores)) {
     if (score > maxScore) { maxScore = score; dominant = type; }
   }
+  if (!dominant) return;
 
   state.personalityType = dominant;
   const pt = personalityTypes[dominant];
@@ -1491,7 +1503,7 @@ async function saveItinerary(silent = false) {
   }
 
   const dest = findDestination(state.selectedDestination);
-  const itin = state.aiPackage?.itinerary || itineraryData[state.selectedDestination];
+  const itin = state.aiPackage?.itinerary || itineraryData[state.selectedDestination] || itineraryData['kyoto'];
   if (!dest || !itin) return;
 
   try {
@@ -1514,11 +1526,11 @@ async function saveItinerary(silent = false) {
       })
     });
     state.savedItinerary = true;
-    if (!silent) showToast(`${dest.name} itinerary saved to your account! ✓`);
+    showToast(`${dest.name} itinerary saved to your account! ✓`);
     if (state.user) { updateDashboard(); renderSavedTrips(); }
   } catch (err) {
+    console.error('Save failed:', err.message);
     if (!silent) showToast(`Could not save: ${err.message}`, 'info');
-    else console.warn('Auto-save failed:', err.message);
   }
 }
 

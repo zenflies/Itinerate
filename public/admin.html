@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Itinerate — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 340px;
+    }
+    .login-card h1 { font-size: 1.3rem; margin-bottom: 0.2rem; }
+    .login-card p  { color: #64748b; font-size: 0.8rem; margin-bottom: 1.5rem; }
+    label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.3rem; }
+    input[type=email], input[type=password] {
+      width: 100%; background: #0f1117; border: 1px solid #2d3148;
+      border-radius: 6px; padding: 0.55rem 0.75rem; color: #e2e8f0;
+      font-size: 0.875rem; margin-bottom: 0.9rem; outline: none;
+    }
+    input:focus { border-color: #6366f1; }
+    .error { color: #f87171; font-size: 0.8rem; min-height: 1.1rem; margin-top: 0.4rem; }
+
+    /* ── App shell ── */
+    #app { display: none; }
+
+    header {
+      background: #1a1d2e; border-bottom: 1px solid #2d3148;
+      padding: 0 1.25rem; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-weight: 700; font-size: 1rem; }
+    .logo em { color: #6366f1; font-style: normal; }
+    .badge {
+      background: #6366f1; color: #fff; font-size: 0.65rem;
+      font-weight: 700; padding: 0.1rem 0.45rem;
+      border-radius: 999px; margin-left: 0.4rem; vertical-align: middle;
+    }
+    .hdr-right { display: flex; align-items: center; gap: 0.75rem; color: #94a3b8; font-size: 0.8rem; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 0; border-bottom: 1px solid #2d3148;
+      background: #1a1d2e; padding: 0 1.25rem;
+    }
+    .tab {
+      padding: 0.65rem 1rem; cursor: pointer; font-size: 0.85rem; color: #64748b;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab:hover { color: #e2e8f0; }
+    .tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+
+    /* ── Content ── */
+    main { padding: 1.25rem; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Stats row ── */
+    .stats { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .stat {
+      background: #1a1d2e; border: 1px solid #2d3148; border-radius: 8px;
+      padding: 0.75rem 1rem; min-width: 110px;
+    }
+    .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; margin-top: 0.1rem; }
+
+    /* ── Table ── */
+    .tbl-wrap {
+      background: #1a1d2e; border: 1px solid #2d3148;
+      border-radius: 8px; overflow: auto;
+    }
+    .tbl-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.65rem 1rem; border-bottom: 1px solid #2d3148;
+    }
+    .tbl-title { font-weight: 600; font-size: 0.85rem; }
+    .tbl-count { font-size: 0.75rem; color: #64748b; }
+
+    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    thead th {
+      text-align: left; padding: 0.5rem 0.85rem;
+      font-size: 0.7rem; color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.05em; border-bottom: 1px solid #2d3148;
+      background: #161929;
+    }
+    tbody tr { border-bottom: 1px solid #1e2235; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(99,102,241,0.04); }
+    td { padding: 0.55rem 0.85rem; vertical-align: middle; color: #cbd5e1; }
+    td.muted { color: #475569; }
+    td.mono  { font-family: monospace; font-size: 0.8rem; }
+
+    .pill {
+      display: inline-block; padding: 0.12rem 0.5rem;
+      border-radius: 999px; font-size: 0.7rem; font-weight: 600;
+    }
+    .pill-admin { background: rgba(99,102,241,0.2); color: #818cf8; }
+    .pill-user  { background: rgba(100,116,139,0.15); color: #94a3b8; }
+
+    .actions { display: flex; gap: 0.35rem; }
+    .btn {
+      padding: 0.28rem 0.6rem; border-radius: 5px; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; border: none;
+    }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-danger  { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sign-in { width: 100%; padding: 0.6rem; font-size: 0.875rem; margin-top: 0.25rem; }
+    .btn-sm-ghost {
+      background: transparent; border: 1px solid #2d3148;
+      color: #94a3b8; font-size: 0.75rem; padding: 0.25rem 0.6rem;
+      border-radius: 5px; cursor: pointer;
+    }
+    .btn-sm-ghost:hover { border-color: #ef4444; color: #ef4444; }
+
+    .empty { text-align: center; padding: 2rem; color: #475569; }
+    .spinning {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid #2d3148; border-top-color: #6366f1;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #toast {
+      position: fixed; bottom: 1rem; right: 1rem;
+      background: #1e2235; border: 1px solid #2d3148; border-radius: 7px;
+      padding: 0.6rem 1rem; font-size: 0.8rem; color: #e2e8f0;
+      opacity: 0; transform: translateY(8px); transition: all 0.2s;
+      pointer-events: none; z-index: 9999; max-width: 280px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok  { border-left: 3px solid #22c55e; }
+    #toast.err { border-left: 3px solid #ef4444; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Itinerate <em>Admin</em></h1>
+    <p>Database viewer — admin access only</p>
+    <label>Email</label>
+    <input type="email" id="l-email" placeholder="admin@example.com" autocomplete="username" />
+    <label>Password</label>
+    <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
+    <button class="btn btn-primary btn-sign-in" id="sign-in-btn">Sign In</button>
+    <p class="error" id="l-err"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <div><span class="logo">Itinerate<em>.</em></span><span class="badge">ADMIN</span></div>
+    <div class="hdr-right">
+      <span id="hdr-user"></span>
+      <button class="btn-sm-ghost" id="sign-out-btn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="users">Users</div>
+    <div class="tab" data-tab="itineraries">Itineraries</div>
+  </div>
+
+  <main>
+    <!-- Users -->
+    <div class="section active" id="tab-users">
+      <div class="stats" id="stats-row">
+        <div class="stat"><div class="stat-label">Total Users</div><div class="stat-value" id="s-total">—</div></div>
+        <div class="stat"><div class="stat-label">Admins</div><div class="stat-value" id="s-admins">—</div></div>
+        <div class="stat"><div class="stat-label">New (7d)</div><div class="stat-value" id="s-recent">—</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-bar">
+          <span class="tbl-title">users</span>
+          <span class="tbl-count" id="u-count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>first_name</th>
+              <th>last_name</th>
+              <th>email</th>
+              <th>is_admin</th>
+              <th>created_at</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody id="u-body">
+            <tr><td colspan="7" class="empty"><span class="spinning"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Itineraries -->
+    <div class="section" id="tab-itineraries">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total Itineraries</div><div class="stat-value" id="s-itin">—</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-bar">
+          <span class="tbl-title">itineraries</span>
+          <span class="tbl-count" id="i-count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>user_id</th>
+              <th>user email</th>
+              <th>destination_name</th>
+              <th>destination_id</th>
+              <th>personality_type</th>
+              <th>departure_date</th>
+              <th>return_date</th>
+              <th>saved_at</th>
+              <th>updated_at</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody id="i-body">
+            <tr><td colspan="11" class="empty"><span class="spinning"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BASE = window.location.origin;
+  let token = null;
+  let currentUser = null;
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = ''; }, 3000);
+  }
+
+  // ── API ────────────────────────────────────────────────────────────────────
+  async function api(path, opts = {}) {
+    const res = await fetch(BASE + path, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(opts.headers || {}) }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed (' + res.status + ')');
+    return data;
+  }
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  async function login() {
+    const email = document.getElementById('l-email').value.trim();
+    const pass  = document.getElementById('l-pass').value;
+    const errEl = document.getElementById('l-err');
+    errEl.textContent = '';
+    try {
+      const data = await fetch(BASE + '/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      }).then(r => r.json());
+      if (data.error) { errEl.textContent = data.error; return; }
+      if (!data.user.is_admin) { errEl.textContent = 'This account does not have admin access.'; return; }
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('itinerate_admin_token', token);
+      boot();
+    } catch { errEl.textContent = 'Cannot connect to server.'; }
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  function boot() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('hdr-user').textContent = currentUser.first_name + ' ' + currentUser.last_name;
+    loadUsers();
+    loadStats();
+  }
+
+  function signOut() {
+    token = null; currentUser = null;
+    localStorage.removeItem('itinerate_admin_token');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('l-pass').value = '';
+    document.getElementById('l-err').textContent = '';
+  }
+
+  // ── Restore session ────────────────────────────────────────────────────────
+  (async () => {
+    const saved = localStorage.getItem('itinerate_admin_token');
+    if (!saved) return;
+    try {
+      const data = await fetch(BASE + '/api/auth/me', { headers: { Authorization: 'Bearer ' + saved } }).then(r => r.json());
+      if (data.user && data.user.is_admin) { token = saved; currentUser = data.user; boot(); }
+      else localStorage.removeItem('itinerate_admin_token');
+    } catch { localStorage.removeItem('itinerate_admin_token'); }
+  })();
+
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'users') loadUsers();
+      if (tab.dataset.tab === 'itineraries') loadItineraries();
+    });
+  });
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const d = await api('/api/admin/stats');
+      document.getElementById('s-total').textContent  = d.totalUsers;
+      document.getElementById('s-admins').textContent = d.totalAdmins;
+      document.getElementById('s-recent').textContent = d.recentUsers;
+      document.getElementById('s-itin').textContent   = d.totalItineraries;
+    } catch (e) { toast(e.message, 'err'); }
+  }
+
+  // ── Users table ────────────────────────────────────────────────────────────
+  async function loadUsers() {
+    const body = document.getElementById('u-body');
+    body.innerHTML = '<tr><td colspan="7" class="empty"><span class="spinning"></span></td></tr>';
+    try {
+      const { users } = await api('/api/admin/users');
+      document.getElementById('u-count').textContent = users.length + ' rows';
+      if (!users.length) { body.innerHTML = '<tr><td colspan="7" class="empty">No users found.</td></tr>'; return; }
+      body.innerHTML = users.map(u => `
+        <tr>
+          <td class="muted mono">${u.id}</td>
+          <td>${esc(u.first_name)}</td>
+          <td>${esc(u.last_name)}</td>
+          <td class="mono">${esc(u.email)}</td>
+          <td><span class="pill ${u.is_admin ? 'pill-admin' : 'pill-user'}">${u.is_admin}</span></td>
+          <td class="muted mono">${u.created_at}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="toggleAdmin(${u.id},${u.is_admin})">${u.is_admin ? 'Revoke admin' : 'Make admin'}</button>
+              <button class="btn btn-danger" onclick="delUser(${u.id})">Delete</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    } catch (e) {
+      body.innerHTML = '<tr><td colspan="7" class="empty">Error: ' + esc(e.message) + '</td></tr>';
+      toast(e.message, 'err');
+    }
+  }
+
+  async function toggleAdmin(id, current) {
+    if (!confirm(current ? 'Remove admin rights from this user?' : 'Grant admin rights to this user?')) return;
+    try { await api('/api/admin/users/' + id + '/admin', { method: 'PUT' }); toast('Updated.'); loadUsers(); loadStats(); }
+    catch (e) { toast(e.message, 'err'); }
+  }
+
+  async function delUser(id) {
+    if (!confirm('Delete this user and all their data?')) return;
+    try { await api('/api/admin/users/' + id, { method: 'DELETE' }); toast('User deleted.'); loadUsers(); loadStats(); }
+    catch (e) { toast(e.message, 'err'); }
+  }
+
+  // ── Itineraries table ──────────────────────────────────────────────────────
+  async function loadItineraries() {
+    const body = document.getElementById('i-body');
+    body.innerHTML = '<tr><td colspan="11" class="empty"><span class="spinning"></span></td></tr>';
+    try {
+      const { itineraries } = await api('/api/admin/itineraries');
+      document.getElementById('i-count').textContent = itineraries.length + ' rows';
+      if (!itineraries.length) { body.innerHTML = '<tr><td colspan="11" class="empty">No itineraries saved yet.</td></tr>'; return; }
+      body.innerHTML = itineraries.map(i => `
+        <tr>
+          <td class="muted mono">${i.id}</td>
+          <td class="muted mono">${i.user_id}</td>
+          <td class="mono">${esc(i.email)}</td>
+          <td>${esc(i.destination_name)}</td>
+          <td class="muted mono">${esc(i.destination_id)}</td>
+          <td>${esc(i.personality_type)}</td>
+          <td class="mono">${i.departure_date || '—'}</td>
+          <td class="mono">${i.return_date || '—'}</td>
+          <td class="muted mono">${i.saved_at}</td>
+          <td class="muted mono">${i.updated_at}</td>
+          <td><button class="btn btn-danger" onclick="delItin(${i.id})">Delete</button></td>
+        </tr>`).join('');
+    } catch (e) {
+      body.innerHTML = '<tr><td colspan="11" class="empty">Error: ' + esc(e.message) + '</td></tr>';
+      toast(e.message, 'err');
+    }
+  }
+
+  async function delItin(id) {
+    if (!confirm('Delete this itinerary?')) return;
+    try { await api('/api/admin/itineraries/' + id, { method: 'DELETE' }); toast('Deleted.'); loadItineraries(); loadStats(); }
+    catch (e) { toast(e.message, 'err'); }
+  }
+
+  // ── XSS ───────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  document.getElementById('sign-in-btn').addEventListener('click', login);
+  document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('sign-out-btn').addEventListener('click', signOut);
+</script>
+</body>
+</html>

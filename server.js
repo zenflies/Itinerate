@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const itineraryRoutes = require('./routes/itinerary');
 const contactRoutes = require('./routes/contact');
 const aiRoutes = require('./routes/ai');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/itinerary', itineraryRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ── AI Chatbot Route ─────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {

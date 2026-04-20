@@ -59,6 +59,7 @@ function initDB() {
   `);
 
   // Migrations for columns added after initial release
+  try { db.exec(`ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
   try { db.exec(`ALTER TABLE itineraries ADD COLUMN flight_json TEXT`); } catch (_) {}
   try { db.exec(`ALTER TABLE itineraries ADD COLUMN hotel_json TEXT`); } catch (_) {}
   try { db.exec(`ALTER TABLE itineraries ADD COLUMN destination_json TEXT`); } catch (_) {}

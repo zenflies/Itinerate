@@ -24,4 +24,19 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, JWT_SECRET };
+/**
+ * Express middleware — requires valid JWT AND is_admin flag set in the database.
+ * Always re-checks the DB so privilege changes take effect without re-login.
+ */
+function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    const { getDB } = require('../db');
+    const user = getDB().prepare('SELECT is_admin FROM users WHERE id = ?').get(req.user.id);
+    if (!user || user.is_admin !== 1) {
+      return res.status(403).json({ error: 'Admin access required.' });
+    }
+    next();
+  });
+}
+
+module.exports = { requireAuth, requireAdmin, JWT_SECRET };

@@ -11,7 +11,7 @@ const TOKEN_EXPIRY = '7d';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, firstName: user.first_name },
+    { id: user.id, email: user.email, firstName: user.first_name, isAdmin: user.is_admin === 1 },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRY }
   );
