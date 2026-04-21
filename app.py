@@ -8,6 +8,7 @@ if sys.stdout.encoding != "utf-8":
 
 from flask import Flask, request, jsonify
 from chromadb_document_processor.flights_crew import FlightsCrew
+from chromadb_document_processor.tools.hotel_search_tool import HotelSearchTool
 from dotenv import load_dotenv
 import json
 load_dotenv()
@@ -91,6 +92,32 @@ def flights():
         return jsonify(flight_data)
     except Exception as e:
         return jsonify({"error": str(e), "flights": [], "return_flights": []}), 500
+
+
+@app.route("/hotels", methods=["POST"])
+def hotels():
+    """Hotel search endpoint — calls SerpAPI directly, no LLM needed."""
+    body = request.json or {}
+    destination = body.get("destination", "").strip()
+    check_in_date = body.get("check_in_date", "").strip()
+    check_out_date = body.get("check_out_date", "").strip()
+    max_price_per_night = int(body.get("max_price_per_night", 0) or 0)
+
+    if not destination or not check_in_date or not check_out_date:
+        return jsonify({"error": "destination, check_in_date, and check_out_date are required.", "hotels": []}), 400
+
+    try:
+        raw = HotelSearchTool()._run(
+            destination=destination,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date,
+            max_price_per_night=max_price_per_night,
+        )
+        hotel_data = _extract_json(raw) or {"hotels": []}
+        hotel_data.setdefault("hotels", [])
+        return jsonify(hotel_data)
+    except Exception as e:
+        return jsonify({"error": str(e), "hotels": []}), 500
 
 
 @app.route("/save", methods=["POST"])

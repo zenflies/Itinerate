@@ -476,10 +476,34 @@
         <div class="action-card itinerary" onclick="viewItinerary()">
           <div class="card-icon">📅</div>
           <h3>My Itinerary</h3>
-          <p>Your AI-generated day-by-day travel schedule, tailored to your personality and chosen destination.</p>
+          <p id="itin-card-desc">Your AI-generated day-by-day travel schedule, tailored to your personality and chosen destination.</p>
           <span class="status locked" id="itin-card-status">🔒 Choose a destination first</span>
           <br /><br />
           <button class="btn btn-outline btn-sm" id="itin-card-cta">View Itinerary</button>
+        </div>
+      </div>
+
+      <!-- Saved Itinerary -->
+      <div id="saved-itinerary-section" style="display:none;margin-bottom:40px">
+        <h2 style="margin-bottom:16px;font-size:1.3rem">My Saved Itinerary</h2>
+        <div id="saved-itinerary-card" onclick="viewItinerary()" style="background:white;border-radius:20px;border:1px solid #E5E7EB;padding:28px 32px;cursor:pointer;transition:box-shadow 0.2s,transform 0.2s" onmouseover="this.style.boxShadow='0 8px 30px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+            <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0">
+              <div id="saved-itin-emoji" style="font-size:2.8rem;flex-shrink:0">📅</div>
+              <div style="min-width:0">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+                  <h3 id="saved-itin-title" style="font-size:1.15rem;font-weight:700;color:#1F2937;margin:0"></h3>
+                  <span style="background:#D1FAE5;color:#065F46;font-size:0.72rem;font-weight:600;padding:2px 10px;border-radius:20px">✓ Saved</span>
+                </div>
+                <p id="saved-itin-subtitle" style="font-size:0.85rem;color:#6B7280;margin:0 0 12px"></p>
+                <div id="saved-itin-details" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+              <button onclick="event.stopPropagation();viewItinerary()" class="btn btn-primary btn-sm">View Itinerary →</button>
+              <span id="saved-itin-date" style="font-size:0.75rem;color:#9CA3AF"></span>
+            </div>
+          </div>
         </div>
       </div>
 

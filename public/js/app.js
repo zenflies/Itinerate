@@ -41,7 +41,8 @@ const state = {
   savedItinerary: false,
   departureCity: 'New York (JFK)',
   departureDate: '',
-  budget: null
+  budget: null,
+  liveHotels: []
 };
 
 // ===== QUIZ DATA =====
@@ -468,6 +469,36 @@ const itineraryData = {
       { title: "East Fjords: Silence & Solitude", morning: { title: "Jökulsárlón Glacier Lagoon", desc: "Arrive at the glacial lagoon at sunrise — huge icebergs drift silently across the still water.", tags: ["nature", "relax"] }, afternoon: { title: "Diamond Beach", desc: "Walk to Diamond Beach where icebergs wash onto the black sand and glitter like scattered diamonds.", tags: ["nature", "hidden"] }, evening: { title: "Stargazing from a Remote Cabin", desc: "Stay in an isolated cabin in the East Fjords — no phone signal, no light pollution.", tags: ["relax", "nature"] } },
       { title: "Hot Rivers & Farewell", morning: { title: "Landmannalaugar Hot Springs Hike", desc: "Hike the rhyolite mountains of the Highlands — mountains striped in green, pink, yellow, and black.", tags: ["nature", "adventure"] }, afternoon: { title: "Reykjavik Food Hall & Skyr Tastings", desc: "Return to Reykjavik and explore the Hlemmur food hall.", tags: ["food"] }, evening: { title: "Final Soak: Reykjavik Sky Lagoon", desc: "Your farewell ritual: an hour at Sky Lagoon's infinity geothermal pool.", tags: ["relax"] } }
     ]
+  },
+  barcelona: {
+    title: "Barcelona: Art, Bites & Mediterranean Soul",
+    days: [
+      { title: "Gaudí & the Gothic Quarter", morning: { title: "Sagrada Família at Opening", desc: "Arrive at 9am before the tour groups — the stained glass floods the nave in extraordinary colour and the silence inside feels impossible for a building this famous.", tags: ["culture", "hidden"] }, afternoon: { title: "Gothic Quarter Labyrinth", desc: "Get deliberately lost in the Barri Gòtic's medieval lanes, stumbling across Roman walls, hidden plazas, and dark tapas bars that have been there for a century.", tags: ["culture", "food"] }, evening: { title: "Pintxos Crawl in El Born", desc: "Bar-hop through El Born neighbourhood, eating one or two pintxos per stop — jamón, anchovy, tortilla — washed down with cold Estrella Damm.", tags: ["food"] } },
+      { title: "Park Güell & Barceloneta Beach", morning: { title: "Park Güell at Sunrise", desc: "Enter Park Güell just after 8am to walk the mosaic terraces and ceramic salamander with almost no one else around — a completely different experience from the afternoon crowds.", tags: ["culture", "nature", "hidden"] }, afternoon: { title: "Barceloneta Beach & Seafront Walk", desc: "Spend the afternoon on the city beach then walk the Passeig Marítim — stopping for a cold beer and fresh clams at a chiringuito.", tags: ["relax", "food"] }, evening: { title: "Sunset at Bunkers del Carmel", desc: "Climb to the anti-aircraft bunkers above Gràcia at golden hour for the best 360° panorama of the city — a local secret still largely off the tourist trail.", tags: ["hidden", "culture"] } },
+      { title: "Montserrat Day Trip & Vermouth Hour", morning: { title: "Montserrat Mountain Monastery", desc: "Take the rack railway up to the dramatic serrated mountain and its 11th-century monastery, home to the Black Madonna and extraordinary views of Catalonia.", tags: ["culture", "nature", "adventure"] }, afternoon: { title: "Sant Pau Recinte Modernista", desc: "Return to Barcelona and visit the Art Nouveau hospital-turned-museum — more elaborate than the Sagrada Família and largely overlooked by visitors.", tags: ["culture", "hidden"] }, evening: { title: "Vermouth & Anchovies in Gràcia", desc: "Join the locals for the sacred Saturday vermouth ritual in the squares of Gràcia neighbourhood — vermut, olives, and anchovies as the city comes alive.", tags: ["food", "culture"] } },
+      { title: "Picasso, Markets & the Sea", morning: { title: "Boqueria Market Before 9am", desc: "The Boqueria is tourist-heavy by 10am — arrive early to watch chefs shop, eat a fresh fruit cup, and buy the best jamón ibérico of the trip.", tags: ["food", "hidden"] }, afternoon: { title: "Picasso Museum & El Born", desc: "Walk through the Picasso Museum's chronological collection housed across five connected medieval palaces, then browse El Born's independent boutiques.", tags: ["culture"] }, evening: { title: "Seafood at a Barceloneta Marisquería", desc: "Feast on fideuà (the Catalan noodle paella), grilled razor clams, and fresh gambas at a proper seafood restaurant steps from the Mediterranean.", tags: ["food", "relax"] } },
+      { title: "Montjuïc, Font Màgica & Farewell", morning: { title: "Montjuïc Cable Car & Castle", desc: "Ride the cable car up to the hilltop castle for sweeping views over the port and city, then walk the fortress ramparts at leisure.", tags: ["adventure", "nature"] }, afternoon: { title: "MNAC & Fundació Miró", desc: "Spend the afternoon in two world-class museums on Montjuïc — the Romanesque art collection at MNAC and Joan Miró's colourful, joyful foundation.", tags: ["culture"] }, evening: { title: "Font Màgica & Final Dinner in Eixample", desc: "Watch the Font Màgica light and music show, then head to Eixample for a farewell dinner at a Catalan restaurant with natural wine.", tags: ["food", "relax"] } }
+    ]
+  },
+  maldives: {
+    title: "Maldives: Pure Luxury & Ocean Stillness",
+    days: [
+      { title: "Arrival & First Immersion", morning: { title: "Seaplane Transfer & Villa Check-In", desc: "Arrive by seaplane — 30 minutes over a patchwork of atolls and impossibly blue lagoons — then step directly onto the deck of your overwater bungalow.", tags: ["relax", "nature"] }, afternoon: { title: "House Reef Snorkel", desc: "Slip off the ladder of your villa into the lagoon and snorkel the house reef — sea turtles, parrotfish, and staghorn coral within 10 metres of your deck.", tags: ["nature", "adventure"] }, evening: { title: "Overwater Deck Dinner & Bioluminescence", desc: "Dine on fresh tuna sashimi and lobster on your private deck as the tide brings in bioluminescent plankton — the water glows blue around the stilts below.", tags: ["relax", "food", "hidden"] } },
+      { title: "Manta Rays & Underwater World", morning: { title: "Manta Ray Point Dive", desc: "Dive the cleaning station at sunrise when manta rays arrive in formation — some spanning 4 metres — hovering motionless while reef fish pick parasites from their wings.", tags: ["adventure", "nature"] }, afternoon: { title: "Dolphin Cruise at Sunset", desc: "Board a traditional dhoni boat as hundreds of spinner dolphins race the bow wave through a pink-lit sea — one of the Indian Ocean's great wildlife spectacles.", tags: ["nature", "relax"] }, evening: { title: "Underwater Restaurant Dinner", desc: "Descend below the lagoon to dine in a glass-walled underwater restaurant surrounded by reef sharks, rays, and reef fish gliding past the windows.", tags: ["food", "hidden"] } },
+      { title: "Spa, Sandbanks & Solitude", morning: { title: "Private Sandbank Picnic", desc: "A resort boat drops you on a deserted sandbank — nothing but white sand, a picnic hamper, and open ocean in every direction for two hours of complete solitude.", tags: ["relax", "hidden"] }, afternoon: { title: "Ocean & Coconut Scrub at the Overwater Spa", desc: "An 2-hour Maldivian ritual treatment at the overwater spa — coconut exfoliation followed by a warm stone massage with ocean sounds beneath the treatment floor.", tags: ["relax"] }, evening: { title: "Star Deck Stargazing", desc: "Lie on the resort's night-dive platform far from shore — virtually zero light pollution reveals the Milky Way stretched across the full sky above the Indian Ocean.", tags: ["relax", "nature", "hidden"] } },
+      { title: "Surfing, Fishing & Island Hopping", morning: { title: "Surf the Breaks at Pasta Point", desc: "Ride one of the Indian Ocean's most consistent left-handers — a long, barrelling reef break suitable for intermediate and advanced surfers.", tags: ["adventure"] }, afternoon: { title: "Local Island Visit: Maafushi", desc: "Take a speedboat to the inhabited local island of Maafushi — browse the fish market, visit the Friday mosque, and eat fresh curry at a local café for a fraction of resort prices.", tags: ["culture", "food", "hidden"] }, evening: { title: "Traditional Maldivian Fish Barbecue", desc: "Return for a beachside barbecue of today's catch — yellowfin tuna, wahoo, and barracuda grilled over coconut husk charcoal on the beach.", tags: ["food", "relax"] } },
+      { title: "Deep Blue & Farewell Lagoon", morning: { title: "Sunrise Kayak Through the Atoll", desc: "Paddle out alone at 6am through the flat-calm lagoon as the sky turns pink — passing sleeping reef sharks in the shallows and flying fish skimming the surface.", tags: ["nature", "adventure", "relax"] }, afternoon: { title: "Final Reef Dive: Night Creatures by Day", desc: "A last guided dive to the outer reef drop-off — nurse sharks resting on the sand, napoleon wrasse, and a wall of coral descending into blue darkness.", tags: ["adventure", "nature"] }, evening: { title: "Farewell: Champagne on the Sandbank at Dusk", desc: "Your resort arranges a private sunset at an outer sandbank — champagne, flowers, and the last light of the Maldives dissolving into the ocean.", tags: ["relax", "food"] } }
+    ]
+  },
+  tokyo: {
+    title: "Tokyo: Sensory Overload & Hidden Depths",
+    days: [
+      { title: "Arrival: Old Tokyo & the Neon City", morning: { title: "Senso-ji Temple at Dawn", desc: "Walk the Nakamise shopping street before the shops open and stand before Tokyo's oldest temple in near-silence — an extraordinary calm in the world's largest city.", tags: ["culture", "hidden"] }, afternoon: { title: "Shibuya Crossing & Harajuku", desc: "Watch the world's busiest pedestrian crossing from the Starbucks window, then walk up Takeshita Street to witness Harajuku's full-spectrum street fashion.", tags: ["culture", "adventure"] }, evening: { title: "Ramen at Midnight in Shinjuku", desc: "Navigate Shinjuku's Memory Lane (Omoide Yokocho) — tiny yakitori stalls packed with salarymen — then end the night at a tonkotsu ramen counter that never closes.", tags: ["food", "culture", "hidden"] } },
+      { title: "Tsukiji, Teamlab & Ginza", morning: { title: "Tsukiji Outer Market Breakfast", desc: "Arrive at 7am for the freshest sushi breakfast of your life — a 9-piece omakase at a 10-seat counter where the chef is still slicing maguro from this morning's auction.", tags: ["food", "hidden"] }, afternoon: { title: "teamLab Borderless Digital Art Museum", desc: "Lose yourself in the infinite mirror rooms, waterfalling light installations, and morphing digital forests of the world's most-visited digital art museum.", tags: ["culture", "adventure"] }, evening: { title: "Ginza Cocktail Bar on the 40th Floor", desc: "Dress up for cocktails at a Ginza skybar — meticulous Japanese bartending, perfect ice spheres, and the city grid laid out 200 metres below.", tags: ["food", "relax"] } },
+      { title: "Tokyo Food Deep Dive", morning: { title: "Kappabashi Kitchen Town", desc: "Browse the street of professional kitchen suppliers — precision knives, copper pots, lacquerware, and the finest ramen bowls you've ever seen — and choose one blade to take home.", tags: ["food", "culture", "hidden"] }, afternoon: { title: "Depachika: Department Store Underground", desc: "Descend into the basement food halls of Isetan or Mitsukoshi in Shinjuku — an entire floor of perfectly packaged wagashi, Hokkaido dairy, and extravagant bento.", tags: ["food"] }, evening: { title: "Omakase Sushi Counter in Shimbashi", desc: "A 12-course omakase at a 6-seat chef's counter — the chef decides everything based on the day's market. Bring cash, bring patience, bring hunger.", tags: ["food", "hidden"] } },
+      { title: "Day Trip: Nikko or Kamakura", morning: { title: "Kamakura's Great Buddha & Zen Gardens", desc: "Take the 1-hour train south to Kamakura to stand before the 13-metre open-air bronze Buddha, then walk the hydrangea-lined paths of Hokokuji bamboo temple.", tags: ["culture", "nature"] }, afternoon: { title: "Enoshima Island & Pacific Views", desc: "Cross the causeway to the small island of Enoshima — climb to the lighthouse observation deck for views of Mount Fuji on clear days, then eat fresh shirasu (whitebait) over rice.", tags: ["nature", "food", "adventure"] }, evening: { title: "Return to Tokyo: Golden Gai Bars", desc: "Back in Shinjuku, find your bar in Golden Gai — 200 tiny venues each seating 6-8 people, each with its own theme, playlist, and master.", tags: ["food", "hidden", "culture"] } },
+      { title: "Akihabara, Ueno & Farewell", morning: { title: "Akihabara Electronics & Gaming Culture", desc: "Spend the morning in Electric Town — multi-floor arcades, vintage game cartridges, robot kits, and a culture that created the future before anywhere else did.", tags: ["adventure", "culture"] }, afternoon: { title: "Ueno Park & Tokyo National Museum", desc: "Walk Ueno Park to the Tokyo National Museum — the world's largest collection of Japanese art, from samurai armour to 1,000-year-old Buddhist scrolls.", tags: ["culture"] }, evening: { title: "Farewell: Omakase Tempura & Tokyo Tower", desc: "A final tempura omakase — light, precise, extraordinary — then walk to Tokyo Tower as it lights up the night for a last view over the city that never quite sleeps.", tags: ["food", "relax"] } }
+    ]
   }
 };
 
@@ -636,8 +667,13 @@ async function loadUserState() {
     // Load saved itineraries
     const itinData = await apiFetch('/itinerary').catch(() => null);
     if (itinData && itinData.itineraries.length > 0) {
-      // Pre-select the most recently updated one
-      state.selectedDestination = itinData.itineraries[0].destinationId;
+      const saved = itinData.itineraries[0];
+      state.selectedDestination = saved.destinationId;
+      state.savedItinerary = true;
+      state.lastSavedItinerary = saved;
+      if (saved.flight) state.selectedFlight = saved.flight;
+      if (saved.hotel) state.selectedHotel = saved.hotel;
+      if (saved.personalityType && !state.personalityType) state.personalityType = saved.personalityType;
     }
   } catch (err) {
     // Silent fail — not critical
@@ -707,11 +743,27 @@ function updateDashboard() {
   // Update itinerary card
   const itinStatus = document.getElementById('itin-card-status');
   const itinCta = document.getElementById('itin-card-cta');
+  const itinDesc = document.getElementById('itin-card-desc');
   if (itinStatus && itinCta) {
-    if (state.selectedHotel && state.selectedFlight) {
+    if (state.savedItinerary && state.selectedDestination) {
+      const dest = allDestinations.find(d => d.id === state.selectedDestination);
+      itinStatus.className = 'status active';
+      itinStatus.textContent = `✓ Saved: ${dest?.name || 'your trip'}`;
+      itinCta.className = 'btn btn-primary btn-sm';
+      itinCta.textContent = 'View Itinerary';
+      itinCta.onclick = (e) => { e.stopPropagation(); viewItinerary(); };
+      if (itinDesc) {
+        const parts = [dest?.name];
+        if (state.selectedFlight) parts.push(`${state.selectedFlight.airline} to ${state.selectedFlight.to}`);
+        if (state.selectedHotel) parts.push(state.selectedHotel.name);
+        itinDesc.textContent = parts.filter(Boolean).join(' · ');
+      }
+    } else if (state.selectedHotel && state.selectedFlight) {
       itinStatus.className = 'status active';
       itinStatus.textContent = `✓ Flight & hotel selected`;
       itinCta.className = 'btn btn-primary btn-sm';
+      itinCta.textContent = 'View Itinerary';
+      itinCta.onclick = (e) => { e.stopPropagation(); viewItinerary(); };
     } else if (state.selectedFlight) {
       itinStatus.className = 'status pending';
       itinStatus.textContent = `✈️ Flight chosen — pick a hotel`;
@@ -740,6 +792,48 @@ function updateDashboard() {
     if (sidebarEmail) sidebarEmail.textContent = state.user.email;
     if (sidebarAvatar) sidebarAvatar.textContent = state.user.first_name.charAt(0).toUpperCase();
   }
+
+  renderSavedItineraryCard();
+}
+
+function renderSavedItineraryCard() {
+  const section = document.getElementById('saved-itinerary-section');
+  if (!section) return;
+
+  if (!state.savedItinerary || !state.selectedDestination) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const dest = allDestinations.find(d => d.id === state.selectedDestination);
+  const saved = state.lastSavedItinerary;
+  if (!dest) { section.style.display = 'none'; return; }
+
+  const pt = personalityTypes[state.personalityType || 'cultural'];
+  const itin = itineraryData[state.selectedDestination] || { title: `${dest.name}: Your ${pt.title} Journey` };
+
+  document.getElementById('saved-itin-emoji').textContent = dest.emoji;
+  document.getElementById('saved-itin-title').textContent = itin.title;
+  document.getElementById('saved-itin-subtitle').textContent = `${dest.name}, ${dest.country} · ${pt.emoji} ${pt.title}`;
+
+  const details = document.getElementById('saved-itin-details');
+  const pill = (icon, text) =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:#F3F4F6;border-radius:20px;padding:4px 12px;font-size:0.78rem;color:#374151;white-space:nowrap">${icon} ${text}</span>`;
+
+  const flight = state.selectedFlight || saved?.flight;
+  const hotel  = state.selectedHotel  || saved?.hotel;
+  let pills = [];
+  if (flight) pills.push(pill('✈️', `${flight.airline} · ${flight.to}`));
+  if (hotel)  pills.push(pill('🏨', `${hotel.name} · $${hotel.price}/night`));
+  pills.push(pill('📅', '5-day itinerary'));
+  details.innerHTML = pills.join('');
+
+  if (saved?.updatedAt) {
+    const date = new Date(saved.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById('saved-itin-date').textContent = `Saved ${date}`;
+  }
+
+  section.style.display = 'block';
 }
 
 // ===== QUIZ =====
@@ -1071,11 +1165,10 @@ async function fetchAndRenderFlights(destId) {
 
   if (state.budget) {
     flights = flights.filter(f => f.price <= state.budget);
-    returnFlights = returnFlights.filter(f => f.price <= state.budget);
   }
 
   if (!flights.length) {
-    grid.innerHTML = `<div style="text-align:center;padding:60px;color:#94a3b8;grid-column:1/-1">No flights found within your $${state.budget?.toLocaleString()} budget. Try raising your budget or changing your dates.</div>`;
+    grid.innerHTML = `<div style="text-align:center;padding:60px;color:#94a3b8;grid-column:1/-1">No outbound flights found within your $${state.budget?.toLocaleString()} budget. Try raising your budget or changing your dates.</div>`;
     const continueBtn = document.getElementById('flights-continue-btn');
     if (continueBtn) continueBtn.disabled = true;
     return;
@@ -1133,29 +1226,28 @@ function selectReturnFlight(id, flightList) {
 
 
 // ===== HOTELS =====
-function renderHotels(destId) {
-  const dest = allDestinations.find(d => d.id === destId);
-  if (!dest) return;
-  const nameEl = document.getElementById('hotels-dest-name');
-  if (nameEl) nameEl.textContent = dest.name;
-
-  const hotels = hotelData[destId] || [];
-  const grid = document.getElementById('hotels-grid');
-  if (!grid) return;
-
-  grid.innerHTML = hotels.map(h => `
+function _buildHotelCard(h) {
+  const orangeFallback = `this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#EA580C,#F97316)'`;
+  const imgArea = h.image && h.image.startsWith('http')
+    ? `<img src="${h.image}" alt="${h.name}" onerror="${orangeFallback}" style="width:100%;height:100%;object-fit:cover;border-radius:16px 16px 0 0">`
+    : h.image || '🏨';
+  const starsHtml = '★'.repeat(h.stars) + '☆'.repeat(Math.max(0, 5 - h.stars));
+  const ratingHtml = h.rating
+    ? `<span style="font-size:0.8rem;color:var(--gray-600);margin-left:6px">${Number(h.rating).toFixed(1)}${h.reviews ? ` · ${Number(h.reviews).toLocaleString()} reviews` : ''}</span>`
+    : '';
+  return `
     <div class="hotel-card" id="hotel-${h.id}" onclick="selectHotel('${h.id}')">
-      <div class="hotel-img-area">${h.image}</div>
+      <div class="hotel-img-area">${imgArea}</div>
       <div class="hotel-body">
         <div class="hotel-card-top">
           <span class="hotel-type-badge">${h.type}</span>
           <div class="hotel-price-area">
-            <span class="hotel-price">$${h.price.toLocaleString()}</span>
+            <span class="hotel-price">${h.price ? '$' + h.price.toLocaleString() : 'See site'}</span>
             <span class="hotel-price-label">/night</span>
           </div>
         </div>
         <h3 class="hotel-name">${h.name}</h3>
-        <div class="hotel-stars">${'★'.repeat(h.stars)}${'☆'.repeat(5 - h.stars)}</div>
+        <div class="hotel-stars">${starsHtml}${ratingHtml}</div>
         <div class="hotel-neighborhood">📍 ${h.neighborhood}</div>
         <p class="hotel-description">${h.description}</p>
         <div class="hotel-amenities">
@@ -1165,7 +1257,104 @@ function renderHotels(destId) {
           Select This Hotel →
         </button>
       </div>
-    </div>`).join('');
+    </div>`;
+}
+
+function _hotelBudgetRemaining() {
+  if (!state.budget) return null;
+  const flightCost = (state.selectedFlight?.price || 0) + (state.selectedReturnFlight?.price || 0);
+  return Math.max(0, state.budget - flightCost);
+}
+
+function renderHotels(destId) {
+  const dest = allDestinations.find(d => d.id === destId);
+  if (!dest) return;
+  const nameEl = document.getElementById('hotels-dest-name');
+  if (nameEl) nameEl.textContent = dest.name;
+
+  const grid = document.getElementById('hotels-grid');
+  if (grid) grid.innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;grid-column:1/-1">Searching live hotels...</div>';
+
+  const continueBtn = document.getElementById('hotels-continue-btn');
+  if (continueBtn) continueBtn.disabled = true;
+
+  _renderHotelBudgetBar();
+  fetchAndRenderHotels(destId);
+}
+
+function _renderHotelBudgetBar() {
+  const remaining = _hotelBudgetRemaining();
+  let bar = document.getElementById('hotels-budget-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'hotels-budget-bar';
+    const header = document.querySelector('.hotels-header');
+    if (header) header.after(bar);
+  }
+  if (remaining === null) { bar.style.display = 'none'; return; }
+  const maxPerNight = Math.floor(remaining / 5);
+  bar.style.display = '';
+  bar.innerHTML = `
+    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 20px;text-align:center">
+        <div style="font-size:0.72rem;font-weight:600;color:#3B82F6;text-transform:uppercase;letter-spacing:.05em">Remaining Budget</div>
+        <div style="font-size:1.3rem;font-weight:800;color:#1D4ED8">$${remaining.toLocaleString()}</div>
+        <div style="font-size:0.72rem;color:#6B7280">after flights</div>
+      </div>
+      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 20px;text-align:center">
+        <div style="font-size:0.72rem;font-weight:600;color:#16A34A;text-transform:uppercase;letter-spacing:.05em">Max Per Night</div>
+        <div style="font-size:1.3rem;font-weight:800;color:#15803D">$${maxPerNight.toLocaleString()}</div>
+        <div style="font-size:0.72rem;color:#6B7280">for 5 nights</div>
+      </div>
+    </div>`;
+}
+
+async function fetchAndRenderHotels(destId) {
+  const dest = allDestinations.find(d => d.id === destId);
+  if (!dest) return;
+  const grid = document.getElementById('hotels-grid');
+  if (!grid) return;
+
+  const depDate = state.departureDate || (() => {
+    const d = new Date(); d.setDate(d.getDate() + 30);
+    return d.toLocaleDateString('en-CA');
+  })();
+  const [y,m,d] = depDate.split('-').map(Number);
+  const checkIn = depDate;
+  const checkOut = new Date(y, m-1, d+5).toLocaleDateString('en-CA');
+
+  const remaining = _hotelBudgetRemaining();
+  const maxPerNight = remaining !== null ? Math.floor(remaining / 5) : 0;
+
+  let hotels;
+  try {
+    const data = await apiFetch('/hotels', {
+      method: 'POST',
+      body: JSON.stringify({
+        destination: dest.name,
+        check_in_date: checkIn,
+        check_out_date: checkOut,
+        max_price_per_night: maxPerNight,
+      })
+    });
+    hotels = (data.hotels || []).filter(h => h.price > 0 || !maxPerNight);
+    if (maxPerNight > 0) hotels = hotels.filter(h => !h.price || h.price <= maxPerNight);
+  } catch (_) {
+    hotels = (hotelData[destId] || []);
+    if (maxPerNight > 0) hotels = hotels.filter(h => h.price <= maxPerNight);
+  }
+
+  state.liveHotels = hotels;
+
+  if (!hotels.length) {
+    const msg = maxPerNight > 0
+      ? `No hotels found within $${maxPerNight.toLocaleString()}/night. Try raising your budget or choosing a different destination.`
+      : 'No hotels found for this destination. Try different dates.';
+    grid.innerHTML = `<div style="text-align:center;padding:60px;color:#94a3b8;grid-column:1/-1">${msg}</div>`;
+    return;
+  }
+
+  grid.innerHTML = hotels.map(h => _buildHotelCard(h)).join('');
 
   const continueBtn = document.getElementById('hotels-continue-btn');
   if (continueBtn) continueBtn.disabled = !state.selectedHotel;
@@ -1175,7 +1364,7 @@ function renderHotels(destId) {
 }
 
 function selectHotel(id) {
-  const hotels = hotelData[state.selectedDestination] || [];
+  const hotels = state.liveHotels.length ? state.liveHotels : (hotelData[state.selectedDestination] || []);
   const hotel = hotels.find(h => h.id === id);
   if (!hotel) return;
   state.selectedHotel = hotel;
@@ -1257,12 +1446,22 @@ function goToItineraryFromHotels() {
   renderItinerary(state.selectedDestination);
 }
 
+function viewItinerary() {
+  if (!state.selectedDestination) return;
+  showPage('page-itinerary');
+  renderItinerary(state.selectedDestination);
+}
+
 // ===== ITINERARY =====
 function renderItinerary(destId) {
   const dest = allDestinations.find(d => d.id === destId);
-  const itin = itineraryData[destId] || itineraryData['kyoto'];
   const pt = personalityTypes[state.personalityType || 'cultural'];
-  if (!dest || !itin) return;
+  if (!dest) return;
+
+  const itin = itineraryData[destId] || {
+    title: `${dest.name}: Your ${pt.title} Journey`,
+    days: (itineraryData['kyoto']?.days || [])
+  };
 
   document.getElementById('itin-emoji').textContent = dest.emoji;
   document.getElementById('itin-title').textContent = itin.title;
@@ -1359,8 +1558,12 @@ async function saveItinerary() {
   }
 
   const dest = allDestinations.find(d => d.id === state.selectedDestination);
-  const itin = itineraryData[state.selectedDestination];
-  if (!dest || !itin) return;
+  if (!dest) return;
+  const pt = personalityTypes[state.personalityType || 'cultural'];
+  const itin = itineraryData[state.selectedDestination] || {
+    title: `${dest.name}: Your ${pt.title} Journey`,
+    days: (itineraryData['kyoto']?.days || [])
+  };
 
   try {
     await apiFetch('/itinerary', {
@@ -1376,8 +1579,17 @@ async function saveItinerary() {
       })
     });
     state.savedItinerary = true;
+    state.lastSavedItinerary = {
+      destinationId: dest.id,
+      destinationName: dest.name,
+      personalityType: state.personalityType,
+      flight: state.selectedFlight || null,
+      hotel: state.selectedHotel || null,
+      updatedAt: new Date().toISOString()
+    };
     showToast(`${dest.name} itinerary saved to your account! ✓`);
-    if (state.user) updateDashboard();
+    showPage('page-dashboard');
+    updateDashboard();
   } catch (err) {
     showToast(`Could not save: ${err.message}`, 'info');
   }

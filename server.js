@@ -72,6 +72,23 @@ app.post('/api/flights', async (req, res) => {
   }
 });
 
+app.post('/api/hotels', async (req, res) => {
+  const { destination, check_in_date, check_out_date, max_price_per_night } = req.body;
+  if (!destination) return res.status(400).json({ error: 'destination required', hotels: [] });
+  try {
+    const response = await fetch('http://localhost:5000/hotels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destination, check_in_date, check_out_date, max_price_per_night })
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('Hotel search unreachable:', err.message);
+    res.status(502).json({ error: 'Hotel search unavailable', hotels: [] });
+  }
+});
+
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
