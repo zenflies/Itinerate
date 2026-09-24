@@ -69,7 +69,6 @@ The Express server handles authentication, data persistence, and the Gemini chat
 | requests | HTTP calls to SerpAPI |
 
 ### Frontend
-- Vanilla JavaScript single-page application (no framework)
 - CSS Grid/Flexbox responsive layout
 - Local Storage for JWT persistence
 - Fetch API for all backend communication
